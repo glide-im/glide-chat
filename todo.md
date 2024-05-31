@@ -1,0 +1,22 @@
+- session
+    - message
+        - typing
+        - rendering
+        - local message
+        - fail handling
+        - recall
+        - message type
+    - info
+        - cache
+        - detail
+        - settings
+    - manage
+        - pin, mute
+        - cache
+- settings
+    - account
+    - privacy
+- app
+    - login state
+    - data cache
+    - platform adaptive
