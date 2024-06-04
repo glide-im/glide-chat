@@ -74,9 +74,15 @@ class _Session extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: selected ? context.theme.primaryColorLight : Colors.transparent,
-      child: build2(context),
+    return GestureDetector(
+      onSecondaryTap: () {
+        // show menu
+
+      },
+      child: ColoredBox(
+        color: selected ? context.theme.primaryColorLight : Colors.transparent,
+        child: build2(context),
+      ),
     );
   }
 
@@ -106,14 +112,12 @@ class _Session extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Future.delayed(const Duration(milliseconds: 100)).then((value) {
-          final cubit = GlobalCubit.of(context);
-          if (cubit.state.compact) {
-            AppRoutes.session.go(context, arg: session);
-          } else {
-            GlobalCubit.of(context).setCurrentSession(session.id);
-          }
-        });
+        final cubit = GlobalCubit.of(context);
+        if (cubit.state.compact) {
+          AppRoutes.session.go(context, arg: cubit.getSession(session.id)!);
+        } else {
+          GlobalCubit.of(context).setCurrentSession(session.id);
+        }
       },
     );
   }

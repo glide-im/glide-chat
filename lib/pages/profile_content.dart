@@ -64,6 +64,28 @@ class ProfileContent extends StatelessWidget {
           },
         ),
         MenuItemButton(
+          leadingIcon: const Icon(Icons.devices_rounded),
+          child: SizedBox(
+            height: 50,
+            width: 160,
+            child: Row(
+              children: [
+                const Text("Platform"),
+                const Spacer(),
+                BlocBuilder<GlobalCubit, GlobalState>(
+                  buildWhen: (c, p) => c.platform != p.platform,
+                  builder: (context, state) {
+                    return Text(state.platform.name);
+                  },
+                )
+              ],
+            ),
+          ),
+          onPressed: () {
+            GlobalCubit.of(context).switchPlatform();
+          },
+        ),
+        MenuItemButton(
           leadingIcon: const Icon(Icons.logout_rounded),
           child: const Text("Logout"),
           onPressed: () {

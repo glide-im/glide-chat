@@ -10,6 +10,7 @@ import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/dialog.dart';
 import 'package:glide_chat/widget/session_list.dart';
 import 'package:glide_chat/widget/title_bar.dart';
+import 'package:glide_chat/widget/window.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
 class HomePage extends StatelessWidget {
@@ -18,16 +19,15 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<GlobalCubit, GlobalState>(
-      bloc: BlocProvider.of<GlobalCubit>(context),
-      listenWhen: (previous, current) =>
-          previous.initialized != current.initialized,
-      listener: (c, s) {
-        if (s.info == UserInfo.empty) {
-          AppRoutes.login.go(context);
-        }
-      },
-      child: Scaffold(
-        body: BlocBuilder<GlobalCubit, GlobalState>(
+        bloc: BlocProvider.of<GlobalCubit>(context),
+        listenWhen: (previous, current) =>
+            previous.initialized != current.initialized,
+        listener: (c, s) {
+          if (s.info == UserInfo.empty) {
+            AppRoutes.login.go(context);
+          }
+        },
+        child: BlocBuilder<GlobalCubit, GlobalState>(
           buildWhen: (c, p) => c.initialized != p.initialized,
           builder: (context, state) {
             if (!state.initialized) {
@@ -43,9 +43,7 @@ class HomePage extends StatelessWidget {
               L: (c) => const HomePageDesktop(),
             );
           },
-        ),
-      ),
-    );
+        ));
   }
 }
 
@@ -98,6 +96,12 @@ class HomePageDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      body: body(context),
+    );
+  }
+
+  Widget body(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -138,7 +142,33 @@ class HomePageDesktop extends StatelessWidget {
               final session =
                   GlobalCubit.of(context).getSession(state.currentSession);
               if (session == null) {
-                return const SizedBox();
+                return const SizedBox(
+                  height: double.infinity,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: WindowBarActions(),
+                      ),
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.stars_rounded,
+                              size: 80,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 16),
+                            Text("Select a session to start chat !")
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
               return SessionPage(session: session);
             },

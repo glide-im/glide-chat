@@ -5,6 +5,7 @@ import 'package:glide_chat/pages/home_page.dart';
 import 'package:glide_chat/pages/login_page.dart';
 import 'package:glide_chat/pages/session/session_page.dart';
 import 'package:glide_chat/pages/user_profile_page.dart';
+import 'package:glide_chat/widget/adaptive.dart';
 
 enum AppRoutes {
   home,

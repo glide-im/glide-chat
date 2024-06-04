@@ -1,5 +1,11 @@
 part of 'global_cubit.dart';
 
+enum PlatformType {
+  desktop,
+  mobile,
+  web;
+}
+
 class GlobalState {
   final String token;
   final Map<String, Session> sessions;
@@ -9,6 +15,7 @@ class GlobalState {
   final bool compact;
   final UserInfo info;
   final num sessionVersion;
+  final PlatformType platform;
 
   GlobalState({
     required this.token,
@@ -19,6 +26,7 @@ class GlobalState {
     required this.compact,
     required this.info,
     required this.sessionVersion,
+    required this.platform,
   });
 
   GlobalState copyWith({
@@ -30,6 +38,7 @@ class GlobalState {
     bool? compact,
     UserInfo? info,
     num? sessionVersion,
+    PlatformType? platform,
   }) {
     return GlobalState(
       token: token ?? this.token,
@@ -40,6 +49,7 @@ class GlobalState {
       compact: compact ?? this.compact,
       info: info ?? this.info,
       sessionVersion: sessionVersion ?? this.sessionVersion,
+      platform: platform ?? this.platform,
     );
   }
 }
@@ -54,6 +64,7 @@ final class GlobalInitial extends GlobalState {
     super.compact = true,
     super.info = UserInfo.empty,
     super.sessionVersion = 0,
+    super.platform = PlatformType.desktop,
   });
 }
 

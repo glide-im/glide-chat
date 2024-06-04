@@ -32,6 +32,14 @@ class GlobalCubit extends Cubit<GlobalState> {
     emit(state.copyWith(compact: !state.compact));
   }
 
+  void switchPlatform() {
+    const ps = PlatformType.values;
+    final p = state.platform;
+    final i = (ps.indexOf(p) + 1) % ps.length;
+    final pt = ps[i];
+    emit(state.copyWith(platform: pt));
+  }
+
   Future login() async {
     // final bean = await glide.guestLogin("", "test");
     final bean = await glide.tokenLogin(token);
@@ -78,8 +86,19 @@ class GlobalCubit extends Cubit<GlobalState> {
   }
 
   void _init() async {
+    PlatformType platform = PlatformType.mobile;
+    if (kIsWeb) {
+      platform = PlatformType.web;
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      platform = PlatformType.mobile;
+    } else {
+      platform = PlatformType.desktop;
+    }
+
     emit(state.copyWith(
-        compact: !kIsWeb && (Platform.isAndroid || Platform.isIOS)));
+      compact: platform == PlatformType.mobile,
+      platform: platform,
+    ));
 
     final sc = StreamController<List<int>>();
     sc.stream.listen((byte) {

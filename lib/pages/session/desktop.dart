@@ -1,9 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glide_chat/extensions.dart';
-import 'package:glide_chat/global_cubit.dart';
-import 'package:glide_chat/widget/emoji.dart';
-import 'package:glide_chat/widget/title_bar.dart';
+part of 'session_page.dart';
 
 class EmojiPopButton extends StatelessWidget {
   final Function(String) onSelected;
@@ -39,130 +34,128 @@ class EmojiPopButton extends StatelessWidget {
   }
 }
 
-class SessionTitleBar extends StatelessWidget {
-  final Widget title;
-  final Session session;
-
-  const SessionTitleBar(
-      {super.key, required this.title, required this.session});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          DefaultTextStyle(
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Colors.black,
-            ),
-            child: WithGlideStateText(title: title),
-          ),
-          const Spacer(),
-          _MenuButton(id: session.info.id)
-        ],
-      ),
-    );
-  }
-}
-
-class _MenuButton extends StatelessWidget {
+class SessionMenuButton extends StatefulWidget {
   final String id;
 
-  const _MenuButton({required this.id});
+  const SessionMenuButton({super.key, required this.id});
+
+  @override
+  State<SessionMenuButton> createState() => _SessionMenuButtonState();
+}
+
+class _SessionMenuButtonState extends State<SessionMenuButton> {
+  late RenderBox rect;
+  late Size size;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final rect = context.findRenderObject() as RenderBox?;
+      final size = rect!.size;
+      setState(() {
+        this.rect = rect;
+        this.size = size;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GlobalCubit, GlobalState>(
-      buildWhen: (c, p) => c.sessions[id] != p.sessions[id],
+      buildWhen: (c, p) => c.sessions[widget.id] != p.sessions[widget.id],
       builder: (c, s) {
-        final settings = s.sessions[id]!.settings;
-        return PopupMenuButton(itemBuilder: (c) {
-          return [
-            PopupMenuItem(
-              child: const Row(
-                children: [
-                  Icon(Icons.edit_note_rounded),
-                  SizedBox(width: 12),
-                  Text("Edit Session")
-                ],
-              ),
-              onTap: () {},
-            ),
-            PopupMenuItem(
-              child: Row(
-                children: [
-                  Icon(settings.muted
-                      ? Icons.volume_up_rounded
-                      : Icons.volume_off_rounded),
-                  const SizedBox(width: 12),
-                  Text(settings.muted ? "Unmute" : "Mute"),
-                ],
-              ),
-              onTap: () {
-                c.read<GlobalCubit>().updateSessionSettings(
-                      id,
-                      settings.copyWith(
-                        muted: !settings.muted,
-                      ),
-                    );
-              },
-            ),
-            PopupMenuItem(
-              child: Row(
-                children: [
-                  Icon(
-                    settings.pinned > 0
-                        ? Icons.push_pin_rounded
-                        : Icons.push_pin_outlined,
-                  ),
-                  SizedBox(width: 12),
-                  Text(settings.pinned > 0 ? "Unpin" : "Pin")
-                ],
-              ),
-              onTap: () {
-                c.read<GlobalCubit>().updateSessionSettings(
-                      id,
-                      settings.copyWith(
-                        pinned: settings.pinned > 0
-                            ? 0
-                            : DateTime.now().millisecondsSinceEpoch,
-                      ),
-                    );
-              },
-            ),
-            PopupMenuItem(
-              child: Row(
-                children: [
-                  const Icon(Icons.block_rounded),
-                  SizedBox(width: 12),
-                  Text(settings.blocked ? "Unblock" : "Block")
-                ],
-              ),
-              onTap: () {
-                c.read<GlobalCubit>().updateSessionSettings(
-                      id,
-                      settings.copyWith(
-                        muted: !settings.blocked,
-                      ),
-                    );
-              },
-            ),
-            PopupMenuItem(
-              child: const Row(
-                children: [
-                  Icon(Icons.delete_rounded),
-                  SizedBox(width: 12),
-                  Text("Delete")
-                ],
-              ),
-              onTap: () {},
-            ),
-          ];
-        });
+        return PopupMenuButton(
+          itemBuilder: (BuildContext context) =>
+              menus(c, s.sessions[widget.id]!.settings),
+          child: const Icon(Icons.more_horiz_rounded),
+        );
       },
     );
+  }
+
+  menus(BuildContext c, SessionSettings settings) {
+    return [
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.edit_note_rounded),
+            SizedBox(width: 12),
+            Text("Edit Session")
+          ],
+        ),
+        onTap: () {},
+      ),
+      PopupMenuItem(
+        child: Row(
+          children: [
+            Icon(settings.muted
+                ? Icons.volume_up_rounded
+                : Icons.volume_off_rounded),
+            const SizedBox(width: 12),
+            Text(settings.muted ? "Unmute" : "Mute"),
+          ],
+        ),
+        onTap: () {
+          c.read<GlobalCubit>().updateSessionSettings(
+                widget.id,
+                settings.copyWith(
+                  muted: !settings.muted,
+                ),
+              );
+        },
+      ),
+      PopupMenuItem(
+        child: Row(
+          children: [
+            Icon(
+              settings.pinned > 0
+                  ? Icons.push_pin_rounded
+                  : Icons.push_pin_outlined,
+            ),
+            SizedBox(width: 12),
+            Text(settings.pinned > 0 ? "Unpin" : "Pin")
+          ],
+        ),
+        onTap: () {
+          c.read<GlobalCubit>().updateSessionSettings(
+                widget.id,
+                settings.copyWith(
+                  pinned: settings.pinned > 0
+                      ? 0
+                      : DateTime.now().millisecondsSinceEpoch,
+                ),
+              );
+        },
+      ),
+      PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.block_rounded),
+            SizedBox(width: 12),
+            Text(settings.blocked ? "Unblock" : "Block")
+          ],
+        ),
+        onTap: () {
+          c.read<GlobalCubit>().updateSessionSettings(
+                widget.id,
+                settings.copyWith(
+                  muted: !settings.blocked,
+                ),
+              );
+        },
+      ),
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.delete_rounded),
+            SizedBox(width: 12),
+            Text("Delete")
+          ],
+        ),
+        onTap: () {},
+      ),
+    ];
   }
 }

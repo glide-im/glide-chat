@@ -9,9 +9,12 @@ import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/avatar.dart';
 import 'package:glide_chat/widget/emoji.dart';
 import 'package:glide_chat/widget/title_bar.dart';
+import 'package:glide_chat/widget/window.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
-import 'desktop.dart';
+part 'desktop.dart';
+
+part 'mobile.dart';
 
 part 'session_cubit.dart';
 
@@ -66,11 +69,15 @@ class _SessionPage extends StatelessWidget {
   }
 
   Widget build2(BuildContext context, bool compact) {
-    if (!compact) {
-      return body();
-    }
     return Scaffold(
-      appBar: AppBar(
+      appBar: titleBar(context, compact),
+      body: body(),
+    );
+  }
+
+  PreferredSizeWidget titleBar(BuildContext context, bool compact) {
+    if (compact) {
+      return AppBar(
         title: title(),
         actions: [
           IconButton(
@@ -78,9 +85,51 @@ class _SessionPage extends StatelessWidget {
             icon: const Icon(Icons.more_vert_rounded),
           )
         ],
-      ),
-      body: body(),
-    );
+      );
+    } else {
+      return PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(width: 16),
+            DefaultTextStyle(
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Colors.black,
+              ),
+              child: WithGlideStateText(title: title()),
+            ),
+            const Spacer(),
+            PlatformAdaptive(
+              desktop: (c) => IconTheme(
+                data: const IconThemeData(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const WindowBarActions(),
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: SessionMenuButton(id: session.info.id),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                ),
+              ),
+              web: (c) => Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: SessionMenuButton(id: session.info.id),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget title() {
@@ -97,10 +146,6 @@ class _SessionPage extends StatelessWidget {
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Adaptive(
-          builder: (c) => const SizedBox(),
-          L: (c) => SessionTitleBar(title: title(), session: session),
-        ),
         Expanded(
           flex: 1,
           child: BlocBuilder<_SessionCubit, _SessionState>(
@@ -116,30 +161,10 @@ class _SessionPage extends StatelessWidget {
           ),
         ),
         Adaptive(
-          builder: (c) => Material(
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _MessageInput(),
-                  SizedBox(
-                    height: 200,
-                    child: EmojiList(
-                      onSelected: (e) {
-                        //
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          L: (c) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-            child: _MessageInput(),
+          builder: (c) => const MessageInputMobile(),
+          L: (c) => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+            child: MessageInput(),
           ),
         )
       ],
@@ -281,26 +306,33 @@ class _ChatMessage extends StatelessWidget {
   }
 }
 
-class _MessageInput extends StatelessWidget {
+class MessageInput extends StatelessWidget {
+  final VoidCallback? onEmojiClick;
+
+  const MessageInput({super.key, this.onEmojiClick});
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
-        Adaptive(builder: (c) {
-          return IconButton(
-            onPressed: () {
-              //
-            },
-            icon: const Icon(Icons.emoji_emotions_outlined),
-          );
-        }, L: (c) {
-          return EmojiPopButton(
-            onSelected: (emoji) {
-              context.read<_SessionCubit>().addEmoji(emoji);
-            },
-          );
-        }),
+        Adaptive(
+          builder: (c) {
+            return IconButton(
+              onPressed: () {
+                onEmojiClick?.call();
+              },
+              icon: const Icon(Icons.emoji_emotions_outlined),
+            );
+          },
+          L: (c) {
+            return EmojiPopButton(
+              onSelected: (emoji) {
+                context.read<_SessionCubit>().addEmoji(emoji);
+              },
+            );
+          },
+        ),
         Expanded(child: input()),
         BlocListener<_SessionCubit, _SessionState>(
           listenWhen: (c, p) => c.blockInput != p.blockInput,

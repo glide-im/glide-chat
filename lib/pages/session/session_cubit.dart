@@ -101,8 +101,11 @@ class _SessionCubit extends Cubit<_SessionState> {
       await session.sendTextMessage(content);
       state.textController.clear();
     } catch (e) {
-      emit(state.copyWith(sendError: e.toString()));
-      rethrow;
+      if(e is GlideException){
+        emit(state.copyWith(sendError: e.message));
+      }else{
+        emit(state.copyWith(sendError: e.toString()));
+      }
     } finally {
       emit(state.copyWith(
         blockInput: false,

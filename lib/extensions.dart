@@ -6,4 +6,15 @@ extension ContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);
 
   TextTheme get textTheme => Theme.of(this).textTheme;
+
+  void showSnackBar(String message) {
+    ScaffoldMessenger.of(this).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void showToast(String message) {
+    ScaffoldMessenger.of(this).showMaterialBanner(
+        MaterialBanner(content: Text("Banner"), actions: [
+          SizedBox(),
+        ]));
+  }
 }

@@ -3,7 +3,8 @@ import 'package:glide_chat/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/dialog.dart';
-import 'package:glide_chat/widget/emoji.dart';
+import 'package:glide_chat/widget/window.dart';
+import 'package:glide_chat/widget/window_dragble.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -40,6 +41,12 @@ class _LoginDesktop extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const Row(
+            children: [
+              Spacer(),
+              WindowBarActions()
+            ],
+          ),
           const SizedBox(height: 160),
           Card(
             child: Container(
