@@ -41,7 +41,7 @@ class _SessionListViewState extends State<SessionListView> {
             key: Key(key),
             itemCount: sessions.length,
             prototypeItem: _Session(
-              session: GlideSessionInfo.create("", "NA", SessionType.chat),
+              session: GlideSessionInfo.create("-", "NA", SessionType.chat),
               selected: false,
             ),
             itemBuilder: (context, index) {

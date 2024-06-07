@@ -8,6 +8,7 @@ class _SessionState {
   final String sendError;
   final TextEditingController textController;
   final bool showSend;
+  final bool typing;
 
   _SessionState({
     required this.info,
@@ -17,6 +18,7 @@ class _SessionState {
     required this.sendError,
     required this.textController,
     required this.showSend,
+    required this.typing,
   });
 
   factory _SessionState.initial(GlideSessionInfo info) {
@@ -25,6 +27,7 @@ class _SessionState {
       messages: [],
       initialized: false,
       blockInput: false,
+      typing: false,
       showSend: false,
       sendError: "",
       textController: TextEditingController(),
@@ -39,6 +42,7 @@ class _SessionState {
     String? sendError,
     TextEditingController? textController,
     bool? showSend,
+    bool? typing,
   }) {
     return _SessionState(
       info: info ?? this.info,
@@ -48,30 +52,39 @@ class _SessionState {
       sendError: sendError ?? this.sendError,
       textController: textController ?? this.textController,
       showSend: showSend ?? this.showSend,
+      typing: typing ?? this.typing,
     );
   }
 }
 
 class _SessionCubit extends Cubit<_SessionState> {
   late GlideSession session;
-  StreamSubscription? sp;
+  List<StreamSubscription> sps = [];
+  StreamController tc = StreamController();
 
   _SessionCubit(GlideSessionInfo info) : super(_SessionState.initial(info)) {
     init();
   }
 
   Future init() async {
+    session = (await glide.sessionManager.get(state.info.id))!;
     state.textController.addListener(() {
       final text = state.textController.text;
       if (text.isNotEmpty != state.showSend) {
         emit(state.copyWith(showSend: text.isNotEmpty));
       }
+      if (session.info.type == SessionType.chat) {
+        session.sendTypingEvent();
+      }
     });
-
-    session = (await glide.sessionManager.get(state.info.id))!;
-    sp = session.messages().listen((event) {
+    final sp = session.messages().listen((event) {
       emit(state.copyWith(messages: [event, ...state.messages]));
     });
+    final sp2 = session.onTypingChanged().listen((event) {
+      emit(state.copyWith(typing: event));
+    });
+    sps.add(sp);
+    sps.add(sp2);
     final history = await session.history();
     emit(state.copyWith(messages: [...history.reversed]));
   }
@@ -101,9 +114,9 @@ class _SessionCubit extends Cubit<_SessionState> {
       await session.sendTextMessage(content);
       state.textController.clear();
     } catch (e) {
-      if(e is GlideException){
+      if (e is GlideException) {
         emit(state.copyWith(sendError: e.message));
-      }else{
+      } else {
         emit(state.copyWith(sendError: e.toString()));
       }
     } finally {
@@ -115,7 +128,9 @@ class _SessionCubit extends Cubit<_SessionState> {
 
   @override
   Future<void> close() async {
-    sp?.cancel();
+    for (var element in sps) {
+      element.cancel();
+    }
     return super.close();
   }
 }

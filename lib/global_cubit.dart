@@ -15,9 +15,10 @@ part 'global_state.dart';
 final glide = Glide();
 
 const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTc3NTQyMTYsInVpZCI6NTQ2Mzc1LCJkZXZpY2UiOi0xLCJ2ZXIiOjEsImFwcF9pZCI6MX0.7Wvj_-uKuholWNv0ePnjOuVXbMwTY92ObCeJCKaa2yQ";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTgzNjAzNzAsInVpZCI6NTQ2MzkzLCJkZXZpY2UiOi0xLCJ2ZXIiOjEsImFwcF9pZCI6MX0.57f3GUHnxVMddwxkxp2XD0hiveSY5Jgs9ZM5_U-3sS8";
 
-class GlobalCubit extends Cubit<GlobalState> {
+class GlobalCubit extends Cubit<GlobalState>
+    implements SessionEventInterceptor {
   final tag = "GlobalCubit";
 
   GlobalCubit() : super(GlobalInitial()) {
@@ -114,9 +115,7 @@ class GlobalCubit extends Cubit<GlobalState> {
       emit(state.copyWith(state: event));
     });
 
-    glide.shouldCountUnread = (se, message) {
-      return se.id != state.currentSession && message.from != state.info.id;
-    };
+    glide.setSessionEventInterceptor(this);
 
     await glide.init();
     await glide.sessionManager.whileInitialized();
@@ -159,5 +158,22 @@ class GlobalCubit extends Cubit<GlobalState> {
       sessions: ses,
       sessionVersion: state.sessionVersion + 1,
     ));
+  }
+
+  @override
+  int onIncrementUnread(GlideSessionInfo se, GlideChatMessage cm) {
+    final s = se.id != state.currentSession && cm.from != state.info.id;
+    return s ? 1 : 0;
+  }
+
+  @override
+  GlideChatMessage? onInterceptMessage(
+      GlideSessionInfo si, GlideChatMessage cm) {
+    return cm;
+  }
+
+  @override
+  GlideSessionInfo? onSessionCreate(GlideSessionInfo si) {
+    return si;
   }
 }

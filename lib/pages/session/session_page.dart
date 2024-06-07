@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/extensions.dart';
@@ -100,7 +101,7 @@ class _SessionPage extends StatelessWidget {
                 fontSize: 18,
                 color: Colors.black,
               ),
-              child: WithGlideStateText(title: title()),
+              child: title(),
             ),
             const Spacer(),
             PlatformAdaptive(
@@ -136,7 +137,26 @@ class _SessionPage extends StatelessWidget {
     return BlocBuilder<_SessionCubit, _SessionState>(
       buildWhen: (c, p) => c.info.title != p.info.title,
       builder: (context, state) {
-        return WithGlideStateText(title: Text(state.info.title));
+        return WithGlideStateText(
+          title: Row(
+            children: [
+              Text(state.info.title),
+              const SizedBox(width: 12),
+              BlocBuilder<_SessionCubit, _SessionState>(
+                buildWhen: (c, p) => c.typing != p.typing,
+                builder: (context, state) {
+                  if (!state.typing) {
+                    return const SizedBox();
+                  }
+                  return Text(
+                    "Typing...",
+                    style: context.textTheme.labelMedium,
+                  );
+                },
+              )
+            ],
+          ),
+        );
       },
     );
   }
