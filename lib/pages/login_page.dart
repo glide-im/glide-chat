@@ -24,6 +24,17 @@ class LoginPage extends StatelessWidget {
 class _LoginDesktop extends StatelessWidget {
   Future guestLogin(BuildContext context) async {
     try {
+      await GlobalCubit.of(context).loginGuest();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Login failed")));
+      }
+    }
+  }
+
+  Future login(BuildContext context) async {
+    try {
       await GlobalCubit.of(context).login();
     } catch (e) {
       if (context.mounted) {
@@ -93,7 +104,9 @@ class _LoginDesktop extends StatelessWidget {
                       FilledButton(
                         onPressed: () {
                           context.loading(Future(() async {
-                            await Future.delayed(const Duration(seconds: 2));
+                            await context.loading(login(context));
+                            await Future.delayed(Duration(seconds: 2));
+                            if (context.mounted) AppRoutes.home.go(context);
                           }));
                         },
                         child: const Center(

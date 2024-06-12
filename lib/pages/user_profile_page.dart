@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glide_chat/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
-import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String id;
@@ -18,7 +17,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(elevation: 0, backgroundColor:Colors.green.shade600 ,),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.green.shade600,
+      ),
       body: Column(
         children: [
           _Header(id: widget.id),
@@ -62,8 +64,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          GlideSessionInfo? ss =
-              GlobalCubit.of(context).getSession(widget.id)?.info;
+          Session? ss = GlobalCubit.of(context).getSession(widget.id);
           ss ??= await GlobalCubit.of(context).createSession(widget.id, false);
           if (!context.mounted) return;
           AppRoutes.session.go(context, arg: ss);

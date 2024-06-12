@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
 final _logger =
-    Logger(level: kDebugMode ? Level.all : Level.off, printer: PrettyPrinter());
+    Logger(level: kDebugMode ? Level.all : Level.off, printer: SimplePrinter    ());
 
 void logd(String tag, dynamic msg) {
   _logger.d("$tag $msg");

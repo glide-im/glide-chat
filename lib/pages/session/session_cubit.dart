@@ -2,7 +2,8 @@ part of 'session_page.dart';
 
 class _SessionState {
   final GlideSessionInfo info;
-  final List<GlideChatMessage> messages;
+  final List<Message> messages;
+  final Map<num, num> messageState;
   final bool initialized;
   final bool blockInput;
   final String sendError;
@@ -11,6 +12,7 @@ class _SessionState {
   final bool typing;
 
   _SessionState({
+    required this.messageState,
     required this.info,
     required this.messages,
     required this.initialized,
@@ -31,12 +33,14 @@ class _SessionState {
       showSend: false,
       sendError: "",
       textController: TextEditingController(),
+      messageState: {},
     );
   }
 
   _SessionState copyWith({
     GlideSessionInfo? info,
-    List<GlideChatMessage>? messages,
+    List<Message>? messages,
+    Map<num, num>? messageState,
     bool? initialized,
     bool? blockInput,
     String? sendError,
@@ -47,6 +51,7 @@ class _SessionState {
     return _SessionState(
       info: info ?? this.info,
       messages: messages ?? this.messages,
+      messageState: messageState ?? this.messageState,
       initialized: initialized ?? this.initialized,
       blockInput: blockInput ?? this.blockInput,
       sendError: sendError ?? this.sendError,
@@ -61,6 +66,8 @@ class _SessionCubit extends Cubit<_SessionState> {
   late GlideSession session;
   List<StreamSubscription> sps = [];
   StreamController tc = StreamController();
+
+  final tag = "SessionCubit";
 
   _SessionCubit(GlideSessionInfo info) : super(_SessionState.initial(info)) {
     init();
@@ -81,10 +88,29 @@ class _SessionCubit extends Cubit<_SessionState> {
       emit(state.copyWith(messages: [event, ...state.messages]));
     });
     final sp2 = session.onTypingChanged().listen((event) {
+      logd(tag, "typing: $event");
       emit(state.copyWith(typing: event));
+    });
+    final sp3 = session.messageEvent().listen((event) {
+      final index =
+          state.messages.indexWhere((m) => m.mid == event.message.mid);
+      if (index < 0) {
+        return;
+      }
+      if (state.messageState[event.message.mid] == event.message.status.index) {
+        return;
+      }
+      logd(tag, "message status update: $event");
+      state.messageState[event.message.mid] = event.message.status.index;
+      state.messages[index] = event.message;
+      emit(state.copyWith(
+        messages: [...state.messages],
+        messageState: {...state.messageState},
+      ));
     });
     sps.add(sp);
     sps.add(sp2);
+    sps.add(sp3);
     final history = await session.history();
     emit(state.copyWith(messages: [...history.reversed]));
   }

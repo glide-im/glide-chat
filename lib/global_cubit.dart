@@ -52,6 +52,16 @@ class GlobalCubit extends Cubit<GlobalState>
     ));
   }
 
+  Future loginGuest() async {
+    final bean = await glide.guestLogin("", "test");
+    emit(state.copyWith(
+      info: state.info.copyWith(
+        name: bean.nickName,
+        id: bean.uid.toString(),
+      ),
+    ));
+  }
+
   void updateSessionSettings(String id, SessionSettings settings) {
     final sessions = {...state.sessions};
     sessions[id] = sessions[id]!.copyWith(settings: settings);
@@ -66,10 +76,12 @@ class GlobalCubit extends Cubit<GlobalState>
     await glide.logout();
   }
 
-  Future<GlideSessionInfo> createSession(String id, bool channel) async {
+  Future<Session> createSession(String id, bool channel) async {
     final s = await glide.sessionManager
         .create(id, channel ? SessionType.channel : SessionType.chat);
-    return s.info;
+    final ss = Session(info: s.info, settings: SessionSettings.def());
+    state.sessions[id] = ss;
+    return ss;
   }
 
   void setCurrentSession(String id) async {
@@ -161,14 +173,13 @@ class GlobalCubit extends Cubit<GlobalState>
   }
 
   @override
-  int onIncrementUnread(GlideSessionInfo se, GlideChatMessage cm) {
+  int onIncrementUnread(GlideSessionInfo se, Message cm) {
     final s = se.id != state.currentSession && cm.from != state.info.id;
     return s ? 1 : 0;
   }
 
   @override
-  GlideChatMessage? onInterceptMessage(
-      GlideSessionInfo si, GlideChatMessage cm) {
+  Message? onInterceptMessage(GlideSessionInfo si, Message cm) {
     return cm;
   }
 
