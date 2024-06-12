@@ -98,7 +98,6 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       initialRoute: AppRoutes.home.name,
-      onGenerateInitialRoutes: AppRoutes.initRouteListFactory,
       onGenerateRoute: AppRoutes.routeFactory,
     );
   }

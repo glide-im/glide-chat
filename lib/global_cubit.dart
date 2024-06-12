@@ -21,8 +21,13 @@ class GlobalCubit extends Cubit<GlobalState>
     implements SessionEventInterceptor {
   final tag = "GlobalCubit";
 
-  GlobalCubit() : super(GlobalInitial()) {
-    _init();
+  GlobalCubit() : super(GlobalInitial());
+
+  Future<GlobalState> init() async {
+    await _init().forEach((log) {
+      logd(tag, log);
+    });
+    return state;
   }
 
   static GlobalCubit of(BuildContext context) {
@@ -98,7 +103,8 @@ class GlobalCubit extends Cubit<GlobalState>
     await s?.clearUnread();
   }
 
-  void _init() async {
+  Stream<String> _init() async* {
+    yield "init start";
     PlatformType platform = PlatformType.mobile;
     if (kIsWeb) {
       platform = PlatformType.web;
@@ -129,7 +135,7 @@ class GlobalCubit extends Cubit<GlobalState>
 
     glide.setSessionEventInterceptor(this);
 
-    await glide.init();
+    yield* glide.init();
     await glide.sessionManager.whileInitialized();
     glide.sessionManager.events().listen((event) {
       try {
@@ -138,10 +144,8 @@ class GlobalCubit extends Cubit<GlobalState>
         loge(tag, e);
       }
     });
-
-    // todo remove
-    await Future.delayed(const Duration(seconds: 1));
     emit(state.copyWith(initialized: true));
+    yield "init done";
   }
 
   void _onSessionEvent(SessionEvent event) async {

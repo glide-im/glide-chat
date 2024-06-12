@@ -102,12 +102,9 @@ class _LoginDesktop extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       FilledButton(
-                        onPressed: () {
-                          context.loading(Future(() async {
-                            await context.loading(login(context));
-                            await Future.delayed(Duration(seconds: 2));
-                            if (context.mounted) AppRoutes.home.go(context);
-                          }));
+                        onPressed: () async {
+                          await context.loading(login(context));
+                          if (context.mounted) AppRoutes.home.go(context);
                         },
                         child: const Center(
                           widthFactor: 1,
