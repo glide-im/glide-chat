@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
@@ -105,6 +106,9 @@ class GlobalCubit extends Cubit<GlobalState>
 
   Stream<String> _init() async* {
     yield "init start";
+
+    yield* AppCache.init();
+
     PlatformType platform = PlatformType.mobile;
     if (kIsWeb) {
       platform = PlatformType.web;
@@ -128,6 +132,9 @@ class GlobalCubit extends Cubit<GlobalState>
       print(log);
     });
     Glide.setLogger(IOSink(sc));
+
+    glide.setSessionCache(AppCache.instance.sessionCache);
+    // glide.setMessageCache(AppCache.instance.me)
 
     glide.states().listen((event) {
       emit(state.copyWith(state: event));

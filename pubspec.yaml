@@ -13,6 +13,8 @@ dependencies:
   logger: ^2.2.0
   cupertino_icons: ^1.0.6
   window_manager: ^0.3.9
+  sqlite3: ^2.4.3
+  sqlite3_flutter_libs: ^0.5.23
   glide_dart_sdk:
     path: ../glide_dart_sdk
 #    git:
