@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:glide_chat/extensions.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/logger.dart';
 

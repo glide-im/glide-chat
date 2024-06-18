@@ -5,7 +5,7 @@ import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/window.dart';
-import 'package:glide_chat/widget/window_dragble.dart';
+import 'package:glide_chat/widget/window_draggable.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {

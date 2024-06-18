@@ -13,7 +13,7 @@ extension ContextExtensions on BuildContext {
 
   void showToast(String message) {
     ScaffoldMessenger.of(this).showMaterialBanner(
-        MaterialBanner(content: Text("Banner"), actions: [
+        const MaterialBanner(content: Text("Banner"), actions: [
           SizedBox(),
         ]));
   }

@@ -21,23 +21,8 @@ class HomePageDesktop extends StatelessWidget {
             children: [
               _SessionListBar(),
               const Divider(),
-              Expanded(
-                child: BlocBuilder<GlobalCubit, GlobalState>(
-                  buildWhen: (c, p) => c.initialized != p.initialized,
-                  builder: (context, state) {
-                    if (!state.initialized) {
-                      return Center(
-                        child: IconButton(
-                          onPressed: () async {
-                            await context.read<GlobalCubit>().login();
-                          },
-                          icon: const Icon(Icons.replay_circle_filled_rounded),
-                        ),
-                      );
-                    }
-                    return const SessionListView();
-                  },
-                ),
+              const Expanded(
+                child: SessionListView(),
               ),
             ],
           ),

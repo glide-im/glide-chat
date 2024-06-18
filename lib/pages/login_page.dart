@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glide_chat/cache/app_cache.dart';
-import 'package:glide_chat/extensions.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/widget/adaptive.dart';
@@ -67,8 +67,16 @@ class _LoginMobile extends StatelessWidget {
   }
 }
 
-class LoginForm extends StatelessWidget {
+class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
+
+  @override
+  State<LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<LoginForm> {
+  final TextEditingController _accountController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   Future guestLogin(BuildContext context) async {
     try {
@@ -82,8 +90,15 @@ class LoginForm extends StatelessWidget {
   }
 
   Future login(BuildContext context) async {
+    final account = _accountController.text;
+    final password = _passwordController.text;
+
+    if (account.isEmpty || password.isEmpty) {
+      return;
+    }
+
     try {
-      await GlobalCubit.of(context).login();
+      await GlobalCubit.of(context).login(account, password);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
@@ -104,10 +119,13 @@ class LoginForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           TextFormField(
+            controller: _accountController,
             decoration: const InputDecoration(labelText: "Account"),
           ),
           const SizedBox(height: 12),
           TextFormField(
+            controller: _passwordController,
+            keyboardType: TextInputType.visiblePassword,
             decoration: const InputDecoration(labelText: "Password"),
           ),
           const SizedBox(height: 32),
@@ -126,8 +144,6 @@ class LoginForm extends StatelessWidget {
                 onPressed: () async {
                   // await AppCache.instance.sessionCache.addSession(
                   //     GlideSessionInfo.create2("to", SessionType.chat));
-                  await AppCache.instance.sessionCache.getSessions();
-
                   if (context.mounted) {
                     ScaffoldMessenger.of(context)
                         .showSnackBar(const SnackBar(content: Text("TODO")));

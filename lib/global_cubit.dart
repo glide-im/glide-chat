@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,9 +15,6 @@ import 'model/user_info.dart';
 part 'global_state.dart';
 
 final glide = Glide();
-
-const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTgzNjAzNzAsInVpZCI6NTQ2MzkzLCJkZXZpY2UiOi0xLCJ2ZXIiOjEsImFwcF9pZCI6MX0.57f3GUHnxVMddwxkxp2XD0hiveSY5Jgs9ZM5_U-3sS8";
 
 class GlobalCubit extends Cubit<GlobalState>
     implements SessionEventInterceptor {
@@ -47,25 +45,20 @@ class GlobalCubit extends Cubit<GlobalState>
     emit(state.copyWith(platform: pt));
   }
 
-  Future login() async {
-    // final bean = await glide.guestLogin("", "test");
-    final bean = await glide.tokenLogin(token);
-    emit(state.copyWith(
-      info: state.info.copyWith(
-        name: bean.nickName,
-        id: bean.uid.toString(),
-      ),
-    ));
+  Future login(String account, String password) async {
+    final bean = await glide.login(account, password);
+    _onLogin(bean);
   }
 
   Future loginGuest() async {
-    final bean = await glide.guestLogin("", "test");
-    emit(state.copyWith(
-      info: state.info.copyWith(
-        name: bean.nickName,
-        id: bean.uid.toString(),
-      ),
-    ));
+    String name = "";
+    for (var i = 0; i < 10; i++) {
+      final rnd = Random().nextInt(26) + 97;
+      name += String.fromCharCode(rnd);
+    }
+    final avatar = "https://api.dicebear.com/6.x/adventurer/svg?seed=$name";
+    final bean = await glide.guestLogin(name, avatar);
+    _onLogin(bean);
   }
 
   void updateSessionSettings(String id, SessionSettings settings) {
@@ -105,9 +98,11 @@ class GlobalCubit extends Cubit<GlobalState>
   }
 
   Stream<String> _init() async* {
+    if (state.initialized) {
+      yield "already initialized";
+      return;
+    }
     yield "init start";
-
-    yield* AppCache.init();
 
     PlatformType platform = PlatformType.mobile;
     if (kIsWeb) {
@@ -133,17 +128,15 @@ class GlobalCubit extends Cubit<GlobalState>
     });
     Glide.setLogger(IOSink(sc));
 
-    glide.setSessionCache(AppCache.instance.sessionCache);
-    // glide.setMessageCache(AppCache.instance.me)
+    yield* glide.init().map((event) => "sdk init: $event");
 
     glide.states().listen((event) {
       emit(state.copyWith(state: event));
     });
 
     glide.setSessionEventInterceptor(this);
-
-    yield* glide.init();
-    await glide.sessionManager.whileInitialized();
+    glide.setSessionCache(DbCache.instance.session);
+    glide.setMessageCache(DbCache.instance.message);
     glide.sessionManager.events().listen((event) {
       try {
         _onSessionEvent(event);
@@ -151,8 +144,44 @@ class GlobalCubit extends Cubit<GlobalState>
         loge(tag, e);
       }
     });
+
+    final uc = await UserCache.load();
+    if (uc.token.isNotEmpty) {
+      try {
+        yield "token loaded, start token login";
+        final ab = await glide.tokenLogin(uc.token);
+        yield* _onLogin(ab);
+      } catch (e, s) {
+        yield "token login failed, $e, $s";
+      }
+    }
     emit(state.copyWith(initialized: true));
     yield "init done";
+  }
+
+  Stream<String> _onLogin(AuthBean bean) async* {
+    emit(state.copyWith(
+      info: state.info.copyWith(
+        name: bean.nickName,
+        id: bean.uid.toString(),
+      ),
+    ));
+
+    final uc = await UserCache.load();
+    uc.uid = bean.uid.toString();
+    uc.name = bean.nickName ?? '';
+    uc.token = bean.token!;
+    uc.save();
+
+    await glide.sessionManager.whileInitialized();
+    final ss = await glide.sessionManager.getSessions();
+    final sessions = <String, Session>{};
+    for (final s in ss) {
+      final ns = Session(info: s.info, settings: SessionSettings.def());
+      sessions[s.info.id] = ns;
+    }
+
+    emit(state.copyWith(sessions: sessions));
   }
 
   void _onSessionEvent(SessionEvent event) async {

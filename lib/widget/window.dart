@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:glide_chat/extensions.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/widget/adaptive.dart';
-import 'package:glide_chat/widget/window_dragble.dart';
+import 'package:glide_chat/widget/window_draggable.dart';
 import 'package:window_manager/window_manager.dart';
 
 class DesktopWindow extends StatelessWidget {
@@ -15,7 +15,7 @@ class DesktopWindow extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(4),
           boxShadow: const [
             BoxShadow(
               color: Colors.black12,

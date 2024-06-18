@@ -9,12 +9,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # ui/data state manager
   flutter_bloc: ^8.1.0
   logger: ^2.2.0
   cupertino_icons: ^1.0.6
+  # for desktop platform
   window_manager: ^0.3.9
+  # sqlite access
   sqlite3: ^2.4.3
+  # import sqlite shared library
   sqlite3_flutter_libs: ^0.5.23
+  # key value storage
+  shared_preferences: ^2.2.3
+
   glide_dart_sdk:
     path: ../glide_dart_sdk
 #    git:

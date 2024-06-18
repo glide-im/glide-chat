@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glide_chat/extensions.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/global_cubit.dart';
 import 'package:glide_chat/model/user_info.dart';
 import 'package:glide_chat/pages/profile_content.dart';
