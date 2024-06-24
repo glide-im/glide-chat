@@ -11,6 +11,7 @@ import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/avatar.dart';
 import 'package:glide_chat/widget/emoji.dart';
 import 'package:glide_chat/widget/title_bar.dart';
+import 'package:glide_chat/widget/user_info.dart';
 import 'package:glide_chat/widget/window.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 

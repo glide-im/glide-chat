@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/routes.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/utils/logger.dart';
 
 class BottomSheetWrap extends StatelessWidget {
@@ -32,14 +32,8 @@ class BottomSheetWrap extends StatelessWidget {
 extension LoadingDialogExt on BuildContext {
   Future<void> loading(Future future) async {
     LoadingDialog.show(this);
-    try {
-      await future;
-    } catch (e) {
-      loge("LoadingDialogExt", e);
-      rethrow;
-    } finally {
-      LoadingDialog.hide(this);
-    }
+    await future;
+    LoadingDialog.hide(this);
   }
 }
 

@@ -110,15 +110,15 @@ class _MyAppState extends State<MyApp> {
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
         ),
-        filledButtonTheme: const FilledButtonThemeData(
-          style: ButtonStyle(
-            shape: MaterialStatePropertyAll(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-              ),
-            ),
-          ),
-        ),
+        // filledButtonTheme: const FilledButtonThemeData(
+        //   style: ButtonStyle(
+        //     shape: MaterialStatePropertyAll(
+        //       RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.all(Radius.circular(8)),
+        //       ),
+        //     ),
+        //   ),
+        // ),
       ),
       initialRoute: AppRoutes.home.name,
       onGenerateInitialRoutes: AppRoutes.initRouteListFactory,

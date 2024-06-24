@@ -3,6 +3,7 @@ import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
+import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/dialog.dart';
 import 'package:glide_chat/widget/window.dart';
@@ -78,10 +79,17 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _accountController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    GlobalCubit.of(context).logout();
+  }
+
   Future guestLogin(BuildContext context) async {
     try {
       await GlobalCubit.of(context).loginGuest();
-    } catch (e) {
+    } catch (_, e) {
+      loge("login page", e);
       if (context.mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Login failed")));
@@ -99,7 +107,8 @@ class _LoginFormState extends State<LoginForm> {
 
     try {
       await GlobalCubit.of(context).login(account, password);
-    } catch (e) {
+    } catch (_, e) {
+      loge("login page", e);
       if (context.mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Login failed")));
@@ -114,7 +123,7 @@ class _LoginFormState extends State<LoginForm> {
         children: [
           const SizedBox(height: 16),
           const Text(
-            "Welcome to Glide Chat",
+            "Glide Chat",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),

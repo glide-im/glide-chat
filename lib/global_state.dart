@@ -13,7 +13,8 @@ class GlobalState {
   final String currentSession;
   final bool initialized;
   final bool compact;
-  final UserInfo info;
+  final ChatInfo info;
+  final bool logged;
   final num sessionVersion;
   final PlatformType platform;
 
@@ -27,6 +28,7 @@ class GlobalState {
     required this.info,
     required this.sessionVersion,
     required this.platform,
+    required this.logged,
   });
 
   GlobalState copyWith({
@@ -36,7 +38,8 @@ class GlobalState {
     String? currentSession,
     bool? initialized,
     bool? compact,
-    UserInfo? info,
+    ChatInfo? info,
+    bool? logged,
     num? sessionVersion,
     PlatformType? platform,
   }) {
@@ -48,9 +51,15 @@ class GlobalState {
       initialized: initialized ?? this.initialized,
       compact: compact ?? this.compact,
       info: info ?? this.info,
+      logged: logged ?? this.logged,
       sessionVersion: sessionVersion ?? this.sessionVersion,
       platform: platform ?? this.platform,
     );
+  }
+
+  @override
+  String toString() {
+    return 'GlobalState{token: ${token.isNotEmpty}, sessions: ${sessions.length}, state: $state, currentSession: $currentSession, initialized: $initialized, compact: $compact, info: $info, logged: $logged, sessionVersion: $sessionVersion, platform: $platform}';
   }
 }
 
@@ -62,9 +71,10 @@ final class GlobalInitial extends GlobalState {
     super.currentSession = "",
     super.initialized = false,
     super.compact = true,
-    super.info = UserInfo.empty,
+    super.info = ChatInfo.empty,
     super.sessionVersion = 0,
     super.platform = PlatformType.desktop,
+    super.logged = false,
   });
 }
 

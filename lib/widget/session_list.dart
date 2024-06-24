@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glide_chat/utils/extensions.dart';
+import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
 import 'avatar.dart';
@@ -40,10 +41,6 @@ class _SessionListViewState extends State<SessionListView> {
           return ListView.builder(
             key: Key(key),
             itemCount: sessions.length,
-            prototypeItem: _Session(
-              session: GlideSessionInfo.create("-", "NA", SessionType.chat),
-              selected: false,
-            ),
             itemBuilder: (context, index) {
               final session = sessions[index];
               return BlocBuilder<GlobalCubit, GlobalState>(
@@ -77,7 +74,6 @@ class _Session extends StatelessWidget {
     return GestureDetector(
       onSecondaryTap: () {
         // show menu
-
       },
       child: ColoredBox(
         color: selected ? context.theme.primaryColorLight : Colors.transparent,
@@ -93,7 +89,7 @@ class _Session extends StatelessWidget {
         leading: SizedBox(
           height: 40,
           width: 40,
-          child: Avatar(title: session.title, url: ""),
+          child: SessionAvatar(session: session),
         ),
         trailing:
             session.unread > 0 ? _UnreadCount(count: session.unread) : null,

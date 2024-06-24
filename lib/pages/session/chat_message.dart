@@ -14,9 +14,9 @@ class _ChatMessage extends StatelessWidget {
 
   String get abbr => message.from.substring(0, 2);
 
-  String get leading {
+  String get datetime {
     final d = DateTime.fromMillisecondsSinceEpoch(message.sendAt.toInt());
-    return "${message.from}  ${d.hour}:${d.minute}";
+    return "${d.hour}:${d.minute}";
   }
 
   @override
@@ -25,7 +25,7 @@ class _ChatMessage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        avatar(context),
+        _avatar(context),
         const SizedBox(width: 8),
         Expanded(child: content(context)),
         const SizedBox(width: 8),
@@ -38,7 +38,7 @@ class _ChatMessage extends StatelessWidget {
     );
   }
 
-  Widget avatar(BuildContext context) {
+  Widget _avatar(BuildContext context) {
     return SizedBox(
       height: 40,
       width: 40,
@@ -49,7 +49,10 @@ class _ChatMessage extends StatelessWidget {
                 onTap: () {
                   AppRoutes.userProfile.go(context, arg: message.from);
                 },
-                child: Avatar(title: abbr, url: ""),
+                child: UserInfoBuilder(
+                  uid: uid,
+                  builder: (c, info) => Avatar(title: abbr, url: info.avatar),
+                ),
               ),
               L: (c) => InkWell(
                 onTap: () async {
@@ -59,7 +62,10 @@ class _ChatMessage extends StatelessWidget {
                   if (!context.mounted) return;
                   GlobalCubit.of(context).setCurrentSession(uid);
                 },
-                child: Avatar(title: abbr, url: ""),
+                child: UserInfoBuilder(
+                  uid: uid,
+                  builder: (c, info) => Avatar(title: abbr, url: info.avatar),
+                ),
               ),
             ),
     );
@@ -93,9 +99,12 @@ class _ChatMessage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          leading,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        UserInfoBuilder(
+          uid: uid,
+          builder: (c, info) => Text(
+            self ? datetime : "${info.name} $datetime",
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -144,6 +153,8 @@ class _ChipMessage extends StatelessWidget {
     }
   }
 
+  bool get isSystem => message.type == 100 || message.type == 101;
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -153,10 +164,20 @@ class _ChipMessage extends StatelessWidget {
         decoration: BoxDecoration(
             color: Colors.grey.shade400,
             borderRadius: BorderRadius.circular(18)),
-        child: Text(
-          content,
-          style: const TextStyle(color: Colors.white, fontSize: 12),
-        ),
+        child: !isSystem
+            ? Text(
+                content,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              )
+            : UserInfoBuilder(
+                uid: message.content,
+                builder: (c, info) {
+                  return Text(
+                    "${self ? "you" : info.name} ${message.type == 100 ? 'joined' : 'left'} the chat",
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  );
+                },
+              ),
       ),
     );
   }

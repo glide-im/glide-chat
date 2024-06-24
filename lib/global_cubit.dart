@@ -10,7 +10,7 @@ import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
-import 'model/user_info.dart';
+import 'model/chat_info.dart';
 
 part 'global_state.dart';
 
@@ -45,12 +45,14 @@ class GlobalCubit extends Cubit<GlobalState>
     emit(state.copyWith(platform: pt));
   }
 
-  Future login(String account, String password) async {
+  Future<dynamic> login(String account, String password) async {
     final bean = await glide.login(account, password);
-    _onLogin(bean);
+    await _onLogin(bean).forEach((element) {
+      logd(tag, "login=> $element");
+    });
   }
 
-  Future loginGuest() async {
+  Future<dynamic> loginGuest() async {
     String name = "";
     for (var i = 0; i < 10; i++) {
       final rnd = Random().nextInt(26) + 97;
@@ -58,7 +60,9 @@ class GlobalCubit extends Cubit<GlobalState>
     }
     final avatar = "https://api.dicebear.com/6.x/adventurer/svg?seed=$name";
     final bean = await glide.guestLogin(name, avatar);
-    _onLogin(bean);
+    await _onLogin(bean).forEach((element) {
+      logd(tag, "login guest=> $element");
+    });
   }
 
   void updateSessionSettings(String id, SessionSettings settings) {
@@ -73,6 +77,8 @@ class GlobalCubit extends Cubit<GlobalState>
 
   Future logout() async {
     await glide.logout();
+    await UserCache.clear();
+    await DbCache.clear();
   }
 
   Future<Session> createSession(String id, bool channel) async {
@@ -102,6 +108,9 @@ class GlobalCubit extends Cubit<GlobalState>
       yield "already initialized";
       return;
     }
+    stream.listen((event) {
+      logd(tag, "state changed: $event");
+    });
     yield "init start";
 
     PlatformType platform = PlatformType.mobile;
@@ -160,18 +169,12 @@ class GlobalCubit extends Cubit<GlobalState>
   }
 
   Stream<String> _onLogin(AuthBean bean) async* {
-    emit(state.copyWith(
-      info: state.info.copyWith(
-        name: bean.nickName,
-        id: bean.uid.toString(),
-      ),
-    ));
 
     final uc = await UserCache.load();
     uc.uid = bean.uid.toString();
     uc.name = bean.nickName ?? '';
     uc.token = bean.token!;
-    uc.save();
+    await uc.save();
 
     await glide.sessionManager.whileInitialized();
     final ss = await glide.sessionManager.getSessions();
@@ -181,7 +184,14 @@ class GlobalCubit extends Cubit<GlobalState>
       sessions[s.info.id] = ns;
     }
 
-    emit(state.copyWith(sessions: sessions));
+    emit(state.copyWith(
+      sessions: sessions,
+      logged: true,
+      info: state.info.copyWith(
+        name: bean.nickName,
+        id: bean.uid.toString(),
+      ),
+    ));
   }
 
   void _onSessionEvent(SessionEvent event) async {
@@ -224,7 +234,18 @@ class GlobalCubit extends Cubit<GlobalState>
   }
 
   @override
-  GlideSessionInfo? onSessionCreate(GlideSessionInfo si) {
-    return si;
+  Future<GlideSessionInfo?> onSessionCreate(GlideSessionInfo si) async {
+    ChatInfo? chatInfo;
+    try {
+      switch (si.type) {
+        case SessionType.chat:
+          chatInfo = await ChatInfoManager.load(false, si.id);
+        case SessionType.channel:
+          chatInfo = await ChatInfoManager.load(true, si.id);
+      }
+    } catch (e) {
+      loge(tag, e);
+    }
+    return si.copyWith(title: chatInfo?.name);
   }
 }

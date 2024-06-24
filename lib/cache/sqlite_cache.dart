@@ -17,26 +17,25 @@ class SQLiteCache {
 
   static final instance = SQLiteCache();
 
-  Future init() async {
-    final uc = await UserCache.load();
-    if (uc.uid.isEmpty) {
+  Future init(String uid) async {
+    if (uid.isEmpty) {
       throw "user not logged in";
     }
-    if (SQLiteCache.instance._uid == uc.uid) {
+    if (SQLiteCache.instance._uid == uid) {
       logd(tag, "uid is same, skip load db");
       return;
     }
     // check init
     if (_db != null) {
-      return;
+      _db?.dispose();
     }
-    _db = sqlite3.open("${uc.uid}.db", mode: OpenMode.readWriteCreate);
+    _db = sqlite3.open("$uid.db", mode: OpenMode.readWriteCreate);
     _db!.execute(_SQL.createTableSession);
     _db!.execute(_SQL.createTableSessionSetting);
     sessionSettingCache = SessionSettingCache(db: _db!);
     sessionCache = _SessionListSqliteCache(db: _db!);
     messageCache = _MessageSQLiteCache(db: _db!);
-    _uid = uc.uid;
+    _uid = uid;
   }
 }
 
@@ -52,6 +51,7 @@ class _SessionModel {
   final num lastReadAt;
   final num lastReadSeq;
   final int type;
+  final String avatar;
 
   _SessionModel({
     required this.id,
@@ -65,6 +65,7 @@ class _SessionModel {
     required this.lastReadAt,
     required this.lastReadSeq,
     required this.type,
+    required this.avatar,
   });
 
   factory _SessionModel.create(GlideSessionInfo session) {
@@ -80,6 +81,7 @@ class _SessionModel {
       lastReadAt: session.lastReadAt,
       lastReadSeq: session.lastReadSeq,
       type: session.type.index,
+      avatar: "",
     );
   }
 
@@ -96,6 +98,7 @@ class _SessionModel {
       lastReadAt: list[8] as num,
       lastReadSeq: list[9] as num,
       type: list[10] as int,
+      avatar: list[11] as String,
     );
   }
 
@@ -128,6 +131,7 @@ class _SessionModel {
       lastReadAt,
       lastReadSeq,
       type,
+      avatar,
     ];
   }
 }
@@ -145,14 +149,15 @@ class _SQL {
     `updateAt` INTEGER NOT NULL,
     `lastReadAt` INTEGER NOT NULL,
     `lastReadSeq` INTEGER NOT NULL,
-    `type` INTEGER NOT NULL
+    `type` INTEGER NOT NULL,
+    `avatar` TEXT NOT NULL
   );
   ''';
   static const deleteTableSession = '''
   DROP TABLE IF EXISTS `session`;
   ''';
   static const insertSession = '''
-  INSERT INTO session VALUES (?,?,?,?,?,?,?,?,?,?,?);
+  INSERT INTO session VALUES (?,?,?,?,?,?,?,?,?,?,?,?);
   ''';
   static const selectSession = '''
   SELECT * FROM session WHERE id = ?;
@@ -165,7 +170,7 @@ class _SQL {
   ''';
   static const updateSession = '''
   UPDATE `session` SET 
-  `ticket` = ?, `to` = ?, `title` = ?, `unread` = ?, `lastMessage` = ?, `createAt` = ?, `updateAt` = ?, `lastReadAt` = ?, `lastReadSeq` = ?, `type` = ? 
+  `ticket`=?, `to`=?, `title`=?, `unread`=?, `lastMessage`=?, `createAt`=?, `updateAt`=?, `lastReadAt`=?, `lastReadSeq`=?, `type`=?, `avatar`=?
   WHERE `id` = ?;
   ''';
   static const createTableSessionSetting = '''
@@ -263,6 +268,7 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future<void> addMessage(String sessionId, Message message) async {
+    logd(tag, "insert message, $sessionId ${message.mid}");
     db.execute("""
     INSERT INTO `message` VALUES (?,?,?,?,?,?,?,?,?,?);
     """, [

@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:glide_chat/cache/session_cache.dart';
+import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/model/chat_info.dart';
+import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +18,54 @@ class DbCache {
 
   static Stream<String> init(String uid) async* {
     //
+  }
+
+  static Future clear() async {
+    await instance.session.clear();
+    await instance.message.clear();
+  }
+}
+
+class ChatInfoManager {
+  static final Map<String, ChatInfo> _cache = {};
+  static const tag = "ChatInfoManager";
+
+  ChatInfoManager();
+
+  static Future<ChatInfo> load(bool channel, String id) async {
+    // logd(tag, "load=>channel:$channel, id:$id");
+
+    final key = "i_${channel ? "ch" : "user"}_$id";
+    ChatInfo? c = _cache[key];
+    if (c != null) {
+      return c;
+    }
+    if (channel) {
+      return ChatInfo(id: id, name: id, avatar: "", lastSee: 0);
+    } else {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final json = prefs.getString(key);
+      if (json != null) {
+        c = ChatInfo.fromMap(jsonDecode(json));
+      } else {
+        final us = await glide.api.user.getUserInfo([int.parse(id)]);
+        final ui = us.first;
+        c = ChatInfo(id: id, name: ui.nickName, avatar: ui.avatar, lastSee: 0);
+      }
+      _cache[key] = c;
+      await prefs.setString(key, jsonEncode(c.toMap()));
+      return c;
+    }
+  }
+
+  static Future clear() async {
+    _cache.clear();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.getKeys().forEach((element) {
+      if (element.startsWith("i_")) {
+        prefs.remove(element);
+      }
+    });
   }
 }
 
@@ -36,5 +89,12 @@ class UserCache {
     prefs.setString("token", token);
     prefs.setString("uid", uid);
     prefs.setString("name", name);
+  }
+
+  static Future clear() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove("token");
+    prefs.remove("uid");
+    prefs.remove("name");
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/global_cubit.dart';
-import 'package:glide_chat/model/user_info.dart';
+import 'package:glide_chat/model/chat_info.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/widget/avatar.dart';
+import 'package:glide_chat/widget/user_info.dart';
 
 class ProfileContent extends StatelessWidget {
   const ProfileContent({super.key});
@@ -19,7 +21,10 @@ class ProfileContent extends StatelessWidget {
           child: BlocBuilder<GlobalCubit, GlobalState>(
             buildWhen: (c, p) => c.info != p.info,
             builder: (context, state) {
-              return _Header(info: state.info);
+              return UserInfoBuilder(
+                uid: state.info.id,
+                builder: (c, i) => _Header(info: i),
+              );
             },
           ),
         ),
@@ -88,8 +93,16 @@ class ProfileContent extends StatelessWidget {
         MenuItemButton(
           leadingIcon: const Icon(Icons.logout_rounded),
           child: const Text("Logout"),
-          onPressed: () {
-            context.read<GlobalCubit>().logout();
+          onPressed: () async {
+            await context.read<GlobalCubit>().logout();
+            if (context.mounted) AppRoutes.login.go(context);
+          },
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.cleaning_services_rounded),
+          child: const Text("Clear Cache"),
+          onPressed: () async {
+            await ChatInfoManager.clear();
           },
         ),
         const SizedBox(height: 100)
@@ -99,7 +112,7 @@ class ProfileContent extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  final UserInfo info;
+  final ChatInfo info;
 
   const _Header({super.key, required this.info});
 
@@ -123,10 +136,14 @@ class _Header extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             info.name,
-            style: const TextStyle(color: Colors.white, fontSize: 18),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           Text(
-            "uid:${info.id}",
+            "uid: ${info.id}",
             style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
           const SizedBox(height: 24),
