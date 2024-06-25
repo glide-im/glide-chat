@@ -21,6 +21,8 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.23
   # key value storage
   shared_preferences: ^2.2.3
+  # os/app dir
+  path_provider: ^2.1.3
 
   glide_dart_sdk:
     path: ../glide_dart_sdk

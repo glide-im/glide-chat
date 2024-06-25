@@ -1,8 +1,7 @@
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
-
-import 'app_cache.dart';
 
 class SQLiteCache {
   late SessionListCache sessionCache;
@@ -21,15 +20,15 @@ class SQLiteCache {
     if (uid.isEmpty) {
       throw "user not logged in";
     }
-    if (SQLiteCache.instance._uid == uid) {
-      logd(tag, "uid is same, skip load db");
+    if (SQLiteCache.instance._uid == uid && _db != null) {
       return;
     }
     // check init
     if (_db != null) {
       _db?.dispose();
     }
-    final db = "$uid.db";
+    final dir = (await getTemporaryDirectory()).absolute.path;
+    final db = "$dir/$uid.sqlite";
     logd(tag, "init db: $db");
     _db = sqlite3.open(db, mode: OpenMode.readWriteCreate);
     _db!.execute(_SQL.createTableSession);
@@ -291,7 +290,8 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future<List<Message>> getMessages(String sessionId) async {
-    final res = db.select("SELECT * FROM `message` WHERE `session_id`=?;", [sessionId]);
+    final res =
+        db.select("SELECT * FROM `message` WHERE `session_id`=?;", [sessionId]);
     final ms = <Message>[];
     for (var row in res.rows) {
       final status = MessageStatus.values[row[0] as int];

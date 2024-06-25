@@ -12,13 +12,12 @@ enum AppRoutes {
   userProfile,
   login;
 
-  static final _routeClean = [
+  static final _routeClean = [];
+
+  static final _routeReplace = [
     AppRoutes.login,
     AppRoutes.home,
-    AppRoutes.session,
   ];
-
-  static final _routeReplace = [];
 
   static Future pop(BuildContext context, {dynamic result}) async {
     return Navigator.pop(context, result);
@@ -29,8 +28,7 @@ enum AppRoutes {
     final replace = _routeReplace.contains(this);
 
     if (clean) {
-      await Navigator.pushNamedAndRemoveUntil(
-          context, name, (route) => route.settings.name == AppRoutes.home.name,
+      await Navigator.pushNamedAndRemoveUntil(context, name, (route) => false,
           arguments: arg);
       return Future.value();
     }
