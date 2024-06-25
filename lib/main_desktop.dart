@@ -58,7 +58,6 @@ class _MyAppState extends State<MyApp> {
       listenWhen: (c, p) => c.logged != p.logged,
       listener: (context, state) {
         if (state.logged) {
-          SessionCubit.of(context).initSession();
           logd("tag", "logged in");
         }
       },

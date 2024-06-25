@@ -35,10 +35,14 @@ class ChatInfoManager {
 
   ChatInfoManager();
 
+  static _key(bool channel, String id) {
+    return "i_${channel ? "ch" : "user"}_$id";
+  }
+
   static Future<ChatInfo> load(bool channel, String id) async {
     // logd(tag, "load=>channel:$channel, id:$id");
 
-    final key = "i_${channel ? "ch" : "user"}_$id";
+    final key = _key(channel, id);
     ChatInfo? c = _cache[key];
     if (c != null) {
       return c;
@@ -59,6 +63,11 @@ class ChatInfoManager {
       await prefs.setString(key, jsonEncode(c.toMap()));
       return c;
     }
+  }
+
+  static ChatInfo? get(bool channel, String id) {
+    final key = _key(channel, id);
+    return _cache[key];
   }
 
   static Future clear() async {

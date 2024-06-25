@@ -136,7 +136,6 @@ class _SessionCubit extends Cubit<_SessionState> {
       sendError: "",
     ));
     try {
-      await Future.delayed(const Duration(seconds: 1)); // todo test
       await session.sendTextMessage(content);
       state.textController.clear();
     } catch (e) {

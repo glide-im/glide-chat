@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/bloc/session_cubit.dart';
 import 'package:glide_chat/bloc/session_state.dart';
-import 'package:glide_chat/cache/app_cache.dart';
-import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
@@ -29,8 +28,13 @@ class _SessionListViewState extends State<SessionListView> {
       width: double.infinity,
       height: double.infinity,
       child: BlocBuilder<SessionCubit, SessionState>(
-        buildWhen: (c, p) => c.sessionVersion != p.sessionVersion,
+        buildWhen: (c, p) =>
+            c.sessionVersion != p.sessionVersion ||
+            c.initialized != p.initialized,
         builder: (context, state) {
+          if (!state.initialized) {
+            return const Center(child: CircularProgressIndicator());
+          }
           if (state.sessions.isEmpty) {
             return const Center(
               child: Text("No sessions yet...", style: TextStyle(fontSize: 16)),

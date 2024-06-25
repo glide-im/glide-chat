@@ -18,16 +18,24 @@ class _UserInfoBuilderState extends State<UserInfoBuilder> {
 
   @override
   void initState() {
+    final ci = ChatInfoManager.get(false, widget.uid);
     setState(() {
-      info = ChatInfo(id: widget.uid, name: widget.uid, avatar: "", lastSee: 0);
+      info = ChatInfo(
+        id: widget.uid,
+        name: ci?.name ?? widget.uid,
+        avatar: ci?.avatar ?? "",
+        lastSee: ci?.lastSee ?? 0,
+      );
     });
-    ChatInfoManager.load(false, widget.uid).then((value) {
-      setState(() {
-        info = value;
+    if (ci == null) {
+      ChatInfoManager.load(false, widget.uid).then((value) {
+        setState(() {
+          info = value;
+        });
+      }).catchError((e) {
+        loge("_UserInfoBuilderState", e);
       });
-    }).catchError((e) {
-      loge("_UserInfoBuilderState", e);
-    });
+    }
     super.initState();
   }
 

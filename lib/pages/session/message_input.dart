@@ -1,6 +1,4 @@
-
 part of 'session_page.dart';
-
 
 class MessageInput extends StatelessWidget {
   final VoidCallback? onEmojiClick;
@@ -41,27 +39,10 @@ class MessageInput extends StatelessWidget {
           },
           child: Container(),
         ),
-        BlocBuilder<_SessionCubit, _SessionState>(
-          buildWhen: (c, p) =>
-          c.blockInput != p.blockInput || c.showSend != p.showSend,
-          builder: (context, state) {
-            if (!state.showSend) {
-              return const SizedBox();
-            }
-            return IconButton(
-              onPressed: () {
-                context.read<_SessionCubit>().sendMessage();
-              },
-              icon: state.blockInput
-                  ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(strokeWidth: 4),
-              )
-                  : const Icon(Icons.send_rounded),
-            );
-          },
-        ),
+        fileButton(),
+        sendButton(),
+        voiceButton(),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -77,13 +58,92 @@ class MessageInput extends StatelessWidget {
           decoration: InputDecoration(
             hintText: "Message",
             contentPadding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             border: const OutlineInputBorder(borderSide: BorderSide.none),
             hintStyle: TextStyle(color: Colors.grey.shade400),
           ),
           onSubmitted: (v) {
             context.read<_SessionCubit>().sendMessage();
           },
+        );
+      },
+    );
+  }
+
+  Widget sendButton() {
+    return BlocBuilder<_SessionCubit, _SessionState>(
+      buildWhen: (c, p) =>
+          c.blockInput != p.blockInput || c.showSend != p.showSend,
+      builder: (context, state) {
+        if (!state.showSend) {
+          return const SizedBox();
+        }
+        return IconButton(
+          onPressed: () {
+            context.read<_SessionCubit>().sendMessage();
+          },
+          icon: state.blockInput
+              ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(strokeWidth: 4),
+                )
+              : const Icon(Icons.send_rounded),
+        );
+      },
+    );
+  }
+
+  Widget fileButton() {
+    return BlocBuilder<_SessionCubit, _SessionState>(
+      buildWhen: (c, p) =>
+          c.blockInput != p.blockInput || c.showSend != p.showSend,
+      builder: (context, state) {
+        if (state.showSend) {
+          return const SizedBox();
+        }
+        return IconButton(
+          onPressed: () async {
+            FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+            if (result != null) {
+              File file = File(result.files.single.path!);
+              logd("tag", file.path);
+            } else {
+              // User canceled the picker
+            }
+          },
+          icon: state.blockInput
+              ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(strokeWidth: 4),
+                )
+              : const Icon(Icons.attach_file_rounded),
+        );
+      },
+    );
+  }
+
+  Widget voiceButton() {
+    return BlocBuilder<_SessionCubit, _SessionState>(
+      buildWhen: (c, p) =>
+          c.blockInput != p.blockInput || c.showSend != p.showSend,
+      builder: (context, state) {
+        if (state.showSend) {
+          return const SizedBox();
+        }
+        return IconButton(
+          onPressed: () {
+            //
+          },
+          icon: state.blockInput
+              ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(strokeWidth: 4),
+                )
+              : const Icon(Icons.keyboard_voice_rounded),
         );
       },
     );

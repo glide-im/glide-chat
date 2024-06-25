@@ -1,15 +1,16 @@
-import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
 class SessionState {
   final Map<String, Session> sessions;
   final String currentSession;
   final num sessionVersion;
+  final bool initialized;
 
   SessionState({
     required this.sessions,
     required this.currentSession,
     required this.sessionVersion,
+    required this.initialized,
   });
 
   factory SessionState.init() {
@@ -17,6 +18,7 @@ class SessionState {
       sessions: {},
       currentSession: "",
       sessionVersion: 0,
+      initialized: false,
     );
   }
 
@@ -24,11 +26,13 @@ class SessionState {
     Map<String, Session>? sessions,
     String? currentSession,
     num? sessionVersion,
+    bool? initialized,
   }) {
     return SessionState(
       sessions: sessions ?? this.sessions,
       currentSession: currentSession ?? this.currentSession,
       sessionVersion: sessionVersion ?? this.sessionVersion,
+      initialized: initialized ?? this.initialized,
     );
   }
 }

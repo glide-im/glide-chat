@@ -56,7 +56,7 @@ class _ChatMessage extends StatelessWidget {
               ),
               L: (c) => InkWell(
                 onTap: () async {
-                  Session? ss =  SessionCubit.of(context).getSession(uid);
+                  Session? ss = SessionCubit.of(context).getSession(uid);
                   ss ??=
                       await SessionCubit.of(context).createSession(uid, false);
                   if (!context.mounted) return;
@@ -108,9 +108,10 @@ class _ChatMessage extends StatelessWidget {
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             status(context),
-            const SizedBox(width: 8),
+            if (self) const SizedBox(width: 4),
             Flexible(child: messageBox(context)),
           ],
         ),
