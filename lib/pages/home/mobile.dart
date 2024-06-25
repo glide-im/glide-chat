@@ -1,13 +1,14 @@
-
 part of 'home_page.dart';
 
-
 class HomePageMobile extends StatelessWidget {
-  const HomePageMobile({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+  HomePageMobile({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       drawer: Container(
         width: 260,
         height: double.infinity,

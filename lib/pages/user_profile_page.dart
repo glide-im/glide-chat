@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/bloc/session_cubit.dart';
+import 'package:glide_chat/bloc/session_state.dart';
 import 'package:glide_chat/routes.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -64,8 +65,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          Session? ss = GlobalCubit.of(context).getSession(widget.id);
-          ss ??= await GlobalCubit.of(context).createSession(widget.id, false);
+          Session? ss = SessionCubit.of(context).getSession(widget.id);
+          ss ??= await SessionCubit.of(context).createSession(widget.id, false);
           if (!context.mounted) return;
           AppRoutes.session.go(context, arg: ss);
         },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
+import 'package:glide_chat/bloc/session_cubit.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/adaptive.dart';
@@ -22,8 +23,11 @@ void main() async {
   });
 
   runApp(
-    BlocProvider<GlobalCubit>(
-      create: (context) => GlobalCubit(),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (ctx) => GlobalCubit()),
+        BlocProvider(create: (ctx) => SessionCubit()),
+      ],
       child: const DesktopWindow(
         child: WindowDraggable(child: MyApp()),
       ),
@@ -50,9 +54,18 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Adaptive(
-      builder: (c) => build2(context, true),
-      L: (c) => build2(context, false),
+    return BlocListener<GlobalCubit, GlobalState>(
+      listenWhen: (c, p) => c.logged != p.logged,
+      listener: (context, state) {
+        if (state.logged) {
+          SessionCubit.of(context).initSession();
+          logd("tag", "logged in");
+        }
+      },
+      child: Adaptive(
+        builder: (c) => build2(context, true),
+        L: (c) => build2(context, false),
+      ),
     );
   }
 

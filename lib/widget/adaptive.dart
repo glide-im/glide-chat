@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
 
 class Adaptive extends StatelessWidget {
   final Widget? Function(BuildContext context)? S;

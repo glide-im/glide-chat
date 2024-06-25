@@ -1,11 +1,20 @@
 part of 'home_page.dart';
 
 class HomePageDesktop extends StatelessWidget {
-  const HomePageDesktop({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+  HomePageDesktop({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
+      drawer: Container(
+        width: 360,
+        height: double.infinity,
+        color: Colors.white,
+        child: const ProfileContent(),
+      ),
       body: body(context),
     );
   }
@@ -19,7 +28,7 @@ class HomePageDesktop extends StatelessWidget {
           flex: 1,
           child: Column(
             children: [
-              _SessionListBar(),
+              _SessionListBar(scaffoldKey: scaffoldKey),
               const Divider(),
               const Expanded(
                 child: SessionListView(),
@@ -30,11 +39,11 @@ class HomePageDesktop extends StatelessWidget {
         const VerticalDivider(),
         Expanded(
           flex: 2,
-          child: BlocBuilder<GlobalCubit, GlobalState>(
+          child: BlocBuilder<SessionCubit, SessionState>(
             buildWhen: (c, p) => c.currentSession != p.currentSession,
             builder: (context, state) {
               final session =
-                  GlobalCubit.of(context).getSession(state.currentSession);
+                  SessionCubit.of(context).getSession(state.currentSession);
               if (session == null) {
                 return const SizedBox(
                   height: double.infinity,

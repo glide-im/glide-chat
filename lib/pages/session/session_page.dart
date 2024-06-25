@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:glide_chat/bloc/session_cubit.dart';
+import 'package:glide_chat/bloc/session_state.dart';
 import 'package:glide_chat/utils/extensions.dart';
-import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/adaptive.dart';
@@ -35,12 +38,12 @@ class SessionPage extends StatefulWidget {
 }
 
 class _SessionPageState extends State<SessionPage> {
-  late GlobalCubit cubit;
+  late SessionCubit cubit;
 
   @override
   void initState() {
     setState(() {
-      cubit = GlobalCubit.of(context);
+      cubit = SessionCubit.of(context);
       cubit.setCurrentSession(widget.session.info.id);
     });
     super.initState();

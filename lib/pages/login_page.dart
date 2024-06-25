@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:glide_chat/cache/app_cache.dart';
-import 'package:glide_chat/utils/extensions.dart';
-import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/dialog.dart';
@@ -151,8 +150,6 @@ class _LoginFormState extends State<LoginForm> {
               const SizedBox(width: 8),
               TextButton(
                 onPressed: () async {
-                  // await AppCache.instance.sessionCache.addSession(
-                  //     GlideSessionInfo.create2("to", SessionType.chat));
                   if (context.mounted) {
                     ScaffoldMessenger.of(context)
                         .showSnackBar(const SnackBar(content: Text("TODO")));

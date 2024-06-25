@@ -29,7 +29,9 @@ class SQLiteCache {
     if (_db != null) {
       _db?.dispose();
     }
-    _db = sqlite3.open("$uid.db", mode: OpenMode.readWriteCreate);
+    final db = "$uid.db";
+    logd(tag, "init db: $db");
+    _db = sqlite3.open(db, mode: OpenMode.readWriteCreate);
     _db!.execute(_SQL.createTableSession);
     _db!.execute(_SQL.createTableSessionSetting);
     sessionSettingCache = SessionSettingCache(db: _db!);
@@ -198,6 +200,7 @@ class _SessionListSqliteCache implements SessionListCache {
 
   @override
   Future init(String uid) async {
+    logd(tag, "init session sqlite table, uid: $uid");
     db.execute(_SQL.createTableSession);
   }
 
@@ -250,6 +253,7 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future init(String uid) async {
+    logd(tag, "init message sqlite table, uid: $uid");
     db.execute('''
      CREATE TABLE IF NOT EXISTS `message` (
     `status` INTEGER NOT NULL,

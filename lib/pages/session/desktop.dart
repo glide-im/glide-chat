@@ -63,7 +63,7 @@ class _SessionMenuButtonState extends State<SessionMenuButton> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<GlobalCubit, GlobalState>(
+    return BlocBuilder<SessionCubit, SessionState>(
       buildWhen: (c, p) => c.sessions[widget.id] != p.sessions[widget.id],
       builder: (c, s) {
         return PopupMenuButton(
@@ -90,7 +90,7 @@ class _SessionMenuButtonState extends State<SessionMenuButton> {
       PopupMenuItem(
         child: Row(
           children: [
-            Icon(settings.muted
+            Icon(!settings.muted
                 ? Icons.volume_up_rounded
                 : Icons.volume_off_rounded),
             const SizedBox(width: 12),
@@ -98,7 +98,7 @@ class _SessionMenuButtonState extends State<SessionMenuButton> {
           ],
         ),
         onTap: () {
-          c.read<GlobalCubit>().updateSessionSettings(
+           SessionCubit.of(context).updateSessionSettings(
                 widget.id,
                 settings.copyWith(
                   muted: !settings.muted,
@@ -110,7 +110,7 @@ class _SessionMenuButtonState extends State<SessionMenuButton> {
         child: Row(
           children: [
             Icon(
-              settings.pinned > 0
+              settings.pinned <= 0
                   ? Icons.push_pin_rounded
                   : Icons.push_pin_outlined,
             ),
@@ -119,7 +119,7 @@ class _SessionMenuButtonState extends State<SessionMenuButton> {
           ],
         ),
         onTap: () {
-          c.read<GlobalCubit>().updateSessionSettings(
+          SessionCubit.of(context).updateSessionSettings(
                 widget.id,
                 settings.copyWith(
                   pinned: settings.pinned > 0
@@ -138,10 +138,10 @@ class _SessionMenuButtonState extends State<SessionMenuButton> {
           ],
         ),
         onTap: () {
-          c.read<GlobalCubit>().updateSessionSettings(
+          SessionCubit.of(context).updateSessionSettings(
                 widget.id,
                 settings.copyWith(
-                  muted: !settings.blocked,
+                  blocked: !settings.blocked,
                 ),
               );
         },

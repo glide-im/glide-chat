@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/cache/app_cache.dart';
-import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/model/chat_info.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/widget/avatar.dart';

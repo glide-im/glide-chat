@@ -56,11 +56,11 @@ class _ChatMessage extends StatelessWidget {
               ),
               L: (c) => InkWell(
                 onTap: () async {
-                  Session? ss = GlobalCubit.of(context).getSession(uid);
+                  Session? ss =  SessionCubit.of(context).getSession(uid);
                   ss ??=
-                      await GlobalCubit.of(context).createSession(uid, false);
+                      await SessionCubit.of(context).createSession(uid, false);
                   if (!context.mounted) return;
-                  GlobalCubit.of(context).setCurrentSession(uid);
+                  SessionCubit.of(context).setCurrentSession(uid);
                 },
                 child: UserInfoBuilder(
                   uid: uid,

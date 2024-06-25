@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:glide_chat/bloc/session_cubit.dart';
+import 'package:glide_chat/bloc/session_state.dart';
 import 'package:glide_chat/cache/app_cache.dart';
-import 'package:glide_chat/global_cubit.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
@@ -26,7 +28,7 @@ class _SessionListViewState extends State<SessionListView> {
     return SizedBox(
       width: double.infinity,
       height: double.infinity,
-      child: BlocBuilder<GlobalCubit, GlobalState>(
+      child: BlocBuilder<SessionCubit, SessionState>(
         buildWhen: (c, p) => c.sessionVersion != p.sessionVersion,
         builder: (context, state) {
           if (state.sessions.isEmpty) {
@@ -43,7 +45,7 @@ class _SessionListViewState extends State<SessionListView> {
             itemCount: sessions.length,
             itemBuilder: (context, index) {
               final session = sessions[index];
-              return BlocBuilder<GlobalCubit, GlobalState>(
+              return BlocBuilder<SessionCubit, SessionState>(
                 buildWhen: (c, p) =>
                     c.currentSession != p.currentSession &&
                     (c.currentSession == session.info.id ||
@@ -108,11 +110,11 @@ class _Session extends StatelessWidget {
         ),
       ),
       onTap: () {
-        final cubit = GlobalCubit.of(context);
-        if (cubit.state.compact) {
+        final cubit = SessionCubit.of(context);
+        if (GlobalCubit.of(context).state.compact) {
           AppRoutes.session.go(context, arg: cubit.getSession(session.id)!);
         } else {
-          GlobalCubit.of(context).setCurrentSession(session.id);
+          SessionCubit.of(context).setCurrentSession(session.id);
         }
       },
     );
