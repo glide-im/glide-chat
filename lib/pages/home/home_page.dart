@@ -76,7 +76,14 @@ class _SessionListBar extends StatelessWidget {
               },
               icon: const Icon(Icons.menu_rounded)),
           const SizedBox(width: 12),
-          const Expanded(child: WithGlideStateText(title: Text("Glide"))),
+          const Expanded(
+            child: WithGlideStateText(
+              title: Text(
+                "Glide Chat",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -102,6 +102,8 @@ class _Session extends StatelessWidget {
         title: Text(
           session.title,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
           session.lastMessage,
@@ -114,12 +116,7 @@ class _Session extends StatelessWidget {
         ),
       ),
       onTap: () {
-        final cubit = SessionCubit.of(context);
-        if (GlobalCubit.of(context).state.compact) {
-          AppRoutes.session.go(context, arg: cubit.getSession(session.id)!);
-        } else {
-          SessionCubit.of(context).setCurrentSession(session.id);
-        }
+        SessionCubit.of(context).goSession(context, session);
       },
     );
   }

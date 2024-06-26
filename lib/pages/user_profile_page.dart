@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:glide_chat/bloc/session_cubit.dart';
 import 'package:glide_chat/bloc/session_state.dart';
 import 'package:glide_chat/routes.dart';
+import 'package:glide_chat/utils/extensions.dart';
+import 'package:glide_chat/widget/avatar.dart';
+import 'package:glide_chat/widget/user_info.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String id;
@@ -20,7 +23,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.green.shade600,
+        backgroundColor: context.theme.primaryColor,
       ),
       body: Column(
         children: [
@@ -65,10 +68,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          Session? ss = SessionCubit.of(context).getSession(widget.id);
-          ss ??= await SessionCubit.of(context).createSession(widget.id, false);
-          if (!context.mounted) return;
-          AppRoutes.session.go(context, arg: ss);
+          await SessionCubit.of(context).goSessionOrCreate(context, widget.id);
         },
         child: const Icon(Icons.message_rounded),
       ),
@@ -88,29 +88,40 @@ class _Header extends StatelessWidget {
       alignment: AlignmentDirectional.bottomStart,
       children: [
         Container(
-          color: Colors.green.shade600,
+          color: context.theme.primaryColor,
           height: 300,
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "user nickname",
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
+        UserInfoBuilder(
+          uid: id,
+          builder: (c, ui) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: Avatar(title: ui.name, url: ui.avatar),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    ui.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    "uid: $id",
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ],
               ),
-              Text(
-                "uid: $id",
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-            ],
-          ),
+            );
+          },
         )
       ],
     );

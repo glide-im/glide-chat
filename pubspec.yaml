@@ -24,6 +24,7 @@ dependencies:
   # os/app dir
   path_provider: ^2.1.3
   file_picker: ^8.0.5
+  in_app_notification: ^1.1.2
 
   glide_dart_sdk:
     path: ../glide_dart_sdk

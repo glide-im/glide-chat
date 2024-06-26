@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/model/chat_info.dart';
+import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
@@ -19,12 +20,14 @@ class SessionCubit extends Cubit<SessionState>
   }
 
   Future init() async {
+    if (state.initialized) {
+      return;
+    }
     glide.setEventListener(this);
     glide.setSessionEventInterceptor(this);
     glide.setSessionCache(DbCache.instance.session);
     glide.setMessageCache(DbCache.instance.message);
 
-    glide.states().listen((event) {});
     glide.sessionManager.events().listen((event) {
       try {
         _onSessionEvent(event);
@@ -50,6 +53,23 @@ class SessionCubit extends Cubit<SessionState>
     final ss = Session(info: s.info, settings: SessionSettings.def());
     state.sessions[id] = ss;
     return ss;
+  }
+
+  Future goSessionOrCreate(BuildContext context, String uid) async {
+    if (state.sessions.containsKey(uid)) {
+      return goSession(context, state.sessions[uid]!.info);
+    }
+    final session = await createSession(uid, false);
+    return goSession(context, session.info);
+  }
+
+  Future goSession(BuildContext context, GlideSessionInfo session) async {
+    final cubit = SessionCubit.of(context);
+    if (GlobalCubit.of(context).state.compact) {
+      AppRoutes.session.go(context, arg: cubit.getSession(session.id)!);
+    } else {
+      SessionCubit.of(context).setCurrentSession(session.id);
+    }
   }
 
   void setCurrentSession(String id) async {

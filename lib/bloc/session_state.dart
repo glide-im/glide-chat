@@ -22,6 +22,10 @@ class SessionState {
     );
   }
 
+  bool sessionUpdated(SessionState other, String id){
+    return sessionVersion != other.sessionVersion && sessions[id] != other.sessions[id];
+  }
+
   SessionState copyWith({
     Map<String, Session>? sessions,
     String? currentSession,

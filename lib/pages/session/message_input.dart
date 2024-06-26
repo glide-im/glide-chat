@@ -7,6 +7,10 @@ class MessageInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return build2(context);
+  }
+
+  Widget build2(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
@@ -16,7 +20,14 @@ class MessageInput extends StatelessWidget {
               onPressed: () {
                 onEmojiClick?.call();
               },
-              icon: const Icon(Icons.emoji_emotions_outlined),
+              icon: BlocBuilder<_SessionCubit, _SessionState>(
+                buildWhen: (c, p) => c.showEmoji != p.showEmoji,
+                builder: (context, state) {
+                  return Icon(state.showEmoji
+                      ? Icons.keyboard_hide_rounded
+                      : Icons.emoji_emotions_outlined);
+                },
+              ),
             );
           },
           L: (c) {
@@ -49,12 +60,14 @@ class MessageInput extends StatelessWidget {
 
   Widget input() {
     return BlocBuilder<_SessionCubit, _SessionState>(
-      buildWhen: (c, p) => c.blockInput != p.blockInput,
+      buildWhen: (c, p) =>
+          c.blockInput != p.blockInput || c.focusNode != p.focusNode,
       builder: (context, state) {
         return TextField(
           controller: state.textController,
           enabled: !state.blockInput,
           textInputAction: TextInputAction.send,
+          focusNode: state.focusNode,
           decoration: InputDecoration(
             hintText: "Message",
             contentPadding:

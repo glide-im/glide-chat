@@ -4,13 +4,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/bloc/session_cubit.dart';
 import 'package:glide_chat/bloc/session_state.dart';
-import 'package:glide_chat/utils/extensions.dart';
-import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/routes.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/avatar.dart';
@@ -83,64 +82,15 @@ class _SessionPage extends StatelessWidget {
   Widget build2(BuildContext context, bool compact) {
     return Scaffold(
       appBar: titleBar(context, compact),
-      body: body(),
+      body: body(context),
     );
   }
 
   PreferredSizeWidget titleBar(BuildContext context, bool compact) {
     if (compact) {
-      return AppBar(
-        title: title(),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert_rounded),
-          )
-        ],
-      );
+      return SessionBarMobile(title: title(), session: session);
     } else {
-      return PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(width: 16),
-            DefaultTextStyle(
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 18,
-                color: Colors.black,
-              ),
-              child: title(),
-            ),
-            const Spacer(),
-            PlatformAdaptive(
-              desktop: (c) => IconTheme(
-                data: const IconThemeData(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const WindowBarActions(),
-                    const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: SessionMenuButton(id: session.info.id),
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-                ),
-              ),
-              web: (c) => Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: SessionMenuButton(id: session.info.id),
-              ),
-            ),
-          ],
-        ),
-      );
+      return SessionBarDesktop(title: title(), session: session);
     }
   }
 
@@ -150,21 +100,11 @@ class _SessionPage extends StatelessWidget {
       builder: (context, state) {
         return WithGlideStateText(
           title: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(state.info.title),
               const SizedBox(width: 12),
-              BlocBuilder<_SessionCubit, _SessionState>(
-                buildWhen: (c, p) => c.typing != p.typing,
-                builder: (context, state) {
-                  if (!state.typing) {
-                    return const SizedBox();
-                  }
-                  return Text(
-                    "Typing...",
-                    style: context.textTheme.labelMedium,
-                  );
-                },
-              )
+              typingState(),
             ],
           ),
         );
@@ -172,31 +112,58 @@ class _SessionPage extends StatelessWidget {
     );
   }
 
-  Widget body() {
+  Widget typingState() {
+    return BlocBuilder<_SessionCubit, _SessionState>(
+      buildWhen: (c, p) => c.typing != p.typing,
+      builder: (context, state) {
+        if (!state.typing) {
+          return const SizedBox();
+        }
+        return Text(
+          "Typing...",
+          style: TextStyle(
+            fontSize: 10,
+            color: context.theme.colorScheme.onPrimary,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget body(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           flex: 1,
-          child: BlocBuilder<_SessionCubit, _SessionState>(
-            buildWhen: (c, p) => c.messages != p.messages,
-            builder: (context, state) {
-              if (state.messages.isEmpty) {
-                return const Center(
-                  child: Text("No messages yet..."),
-                );
-              }
-              return messages(state.messages);
-            },
+          child: Container(
+            color: Colors.grey.shade50,
+            child: GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                context.read<_SessionCubit>().setEmojiVisibility(false);
+              },
+              child: BlocBuilder<_SessionCubit, _SessionState>(
+                buildWhen: (c, p) => c.messages != p.messages,
+                builder: (context, state) {
+                  if (state.messages.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "No messages yet...",
+                        style: context.theme.textTheme.bodyMedium,
+                      ),
+                    );
+                  }
+                  return messages(state.messages);
+                },
+              ),
+            ),
           ),
         ),
         Adaptive(
           builder: (c) => const MessageInputMobile(),
-          L: (c) => const Padding(
-            padding: EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-            child: MessageInput(),
-          ),
+          L: (c) => const MessageInput(),
         )
       ],
     );
@@ -204,7 +171,7 @@ class _SessionPage extends StatelessWidget {
 
   Widget messages(List<Message> messages) {
     return Container(
-      color: Colors.grey.shade100,
+      color: Colors.grey.shade50,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         itemCount: messages.length,
@@ -229,5 +196,121 @@ class _SessionPage extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class SessionMenuButton extends StatelessWidget {
+  final String id;
+  final bool compat;
+
+  const SessionMenuButton({super.key, required this.id, required this.compat});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SessionCubit, SessionState>(
+      buildWhen: (c, p) => c.sessionUpdated(p, id),
+      builder: (c, s) {
+        return IconButtonTheme(
+          data: IconButtonThemeData(
+            style: ButtonStyle(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              fixedSize: const MaterialStatePropertyAll(null),
+              minimumSize: const MaterialStatePropertyAll(Size.zero),
+              iconColor: MaterialStateProperty.all(
+                context.theme.colorScheme.onPrimary,
+              ),
+            ),
+          ),
+          child: PopupMenuButton(
+            itemBuilder: (ctx) => menus(ctx, s.sessions[id]!.settings),
+            iconSize: compat ? 18 : null,
+          ),
+        );
+      },
+    );
+  }
+
+  menus(BuildContext context, SessionSettings settings) {
+    return [
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.edit_note_rounded),
+            SizedBox(width: 12),
+            Text("Edit Session")
+          ],
+        ),
+        onTap: () {},
+      ),
+      PopupMenuItem(
+        child: Row(
+          children: [
+            Icon(!settings.muted
+                ? Icons.volume_up_rounded
+                : Icons.volume_off_rounded),
+            const SizedBox(width: 12),
+            Text(settings.muted ? "Unmute" : "Mute"),
+          ],
+        ),
+        onTap: () {
+          SessionCubit.of(context).updateSessionSettings(
+            id,
+            settings.copyWith(
+              muted: !settings.muted,
+            ),
+          );
+        },
+      ),
+      PopupMenuItem(
+        child: Row(
+          children: [
+            Icon(
+              settings.pinned <= 0
+                  ? Icons.push_pin_rounded
+                  : Icons.push_pin_outlined,
+            ),
+            SizedBox(width: 12),
+            Text(settings.pinned > 0 ? "Unpin" : "Pin")
+          ],
+        ),
+        onTap: () {
+          SessionCubit.of(context).updateSessionSettings(
+            id,
+            settings.copyWith(
+              pinned: settings.pinned > 0
+                  ? 0
+                  : DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
+        },
+      ),
+      PopupMenuItem(
+        child: Row(
+          children: [
+            const Icon(Icons.block_rounded),
+            SizedBox(width: 12),
+            Text(settings.blocked ? "Unblock" : "Block")
+          ],
+        ),
+        onTap: () {
+          SessionCubit.of(context).updateSessionSettings(
+            id,
+            settings.copyWith(
+              blocked: !settings.blocked,
+            ),
+          );
+        },
+      ),
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.delete_rounded),
+            SizedBox(width: 12),
+            Text("Delete")
+          ],
+        ),
+        onTap: () {},
+      ),
+    ];
   }
 }

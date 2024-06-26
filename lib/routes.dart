@@ -5,6 +5,8 @@ import 'package:glide_chat/pages/home/home_page.dart';
 import 'package:glide_chat/pages/login_page.dart';
 import 'package:glide_chat/pages/session/session_page.dart';
 import 'package:glide_chat/pages/user_profile_page.dart';
+import 'package:glide_chat/utils/extensions.dart';
+import 'package:glide_chat/widget/notification.dart';
 
 enum AppRoutes {
   home,
@@ -63,14 +65,23 @@ enum AppRoutes {
       return MaterialPageRoute(
         settings: settings,
         builder: (context) {
-          return routeBuilder(context, arg: arg);
+          return _globalWrap(context, routeBuilder(context, arg: arg));
         },
       );
     }
 
     return MaterialPageRoute(
       settings: settings,
-      builder: (context) => routeBuilder(context),
+      builder: (context) => _globalWrap(context, routeBuilder(context)),
+    );
+  }
+
+  static Widget _globalWrap(BuildContext context, Widget child) {
+    return AppNotification(
+      child: ColoredBox(
+        color: context.theme.scaffoldBackgroundColor,
+        child: child,
+      ),
     );
   }
 }

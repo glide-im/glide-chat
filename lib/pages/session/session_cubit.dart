@@ -10,6 +10,8 @@ class _SessionState {
   final TextEditingController textController;
   final bool showSend;
   final bool typing;
+  final bool showEmoji;
+  final FocusNode focusNode;
 
   _SessionState({
     required this.messageState,
@@ -21,20 +23,23 @@ class _SessionState {
     required this.textController,
     required this.showSend,
     required this.typing,
+    required this.showEmoji,
+    required this.focusNode,
   });
 
   factory _SessionState.initial(GlideSessionInfo info) {
     return _SessionState(
-      info: info,
-      messages: [],
-      initialized: false,
-      blockInput: false,
-      typing: false,
-      showSend: false,
-      sendError: "",
-      textController: TextEditingController(),
-      messageState: {},
-    );
+        info: info,
+        messages: [],
+        initialized: false,
+        blockInput: false,
+        typing: false,
+        showSend: false,
+        sendError: "",
+        textController: TextEditingController(),
+        messageState: {},
+        showEmoji: false,
+        focusNode: FocusNode());
   }
 
   _SessionState copyWith({
@@ -47,6 +52,8 @@ class _SessionState {
     TextEditingController? textController,
     bool? showSend,
     bool? typing,
+    bool? showEmoji,
+    FocusNode? focusNode,
   }) {
     return _SessionState(
       info: info ?? this.info,
@@ -58,6 +65,8 @@ class _SessionState {
       textController: textController ?? this.textController,
       showSend: showSend ?? this.showSend,
       typing: typing ?? this.typing,
+      showEmoji: showEmoji ?? this.showEmoji,
+      focusNode: focusNode ?? this.focusNode,
     );
   }
 }
@@ -75,6 +84,11 @@ class _SessionCubit extends Cubit<_SessionState> {
 
   Future init() async {
     session = (await glide.sessionManager.get(state.info.id))!;
+    state.focusNode.addListener(() {
+      if (state.focusNode.hasFocus) {
+        setEmojiVisibility(false);
+      }
+    });
     state.textController.addListener(() {
       final text = state.textController.text;
       if (text.isNotEmpty != state.showSend) {
@@ -115,6 +129,10 @@ class _SessionCubit extends Cubit<_SessionState> {
     emit(state.copyWith(messages: [...history.reversed]));
   }
 
+  void setEmojiVisibility(bool show) {
+    emit(state.copyWith(showEmoji: show));
+  }
+
   void addEmoji(String emoji) {
     final pos = state.textController.selection.end;
     final text = state.textController.text;
@@ -147,6 +165,7 @@ class _SessionCubit extends Cubit<_SessionState> {
     } finally {
       emit(state.copyWith(
         blockInput: false,
+        showEmoji: false,
       ));
     }
   }

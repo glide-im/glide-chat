@@ -34,128 +34,53 @@ class EmojiPopButton extends StatelessWidget {
   }
 }
 
-class SessionMenuButton extends StatefulWidget {
-  final String id;
+class SessionBarDesktop extends StatelessWidget implements PreferredSizeWidget {
+  final Widget title;
+  final Session session;
 
-  const SessionMenuButton({super.key, required this.id});
-
-  @override
-  State<SessionMenuButton> createState() => _SessionMenuButtonState();
-}
-
-class _SessionMenuButtonState extends State<SessionMenuButton> {
-  late RenderBox rect;
-  late Size size;
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final rect = context.findRenderObject() as RenderBox?;
-      final size = rect!.size;
-      setState(() {
-        this.rect = rect;
-        this.size = size;
-      });
-    });
-  }
+  const SessionBarDesktop({
+    super.key,
+    required this.title,
+    required this.session,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SessionCubit, SessionState>(
-      buildWhen: (c, p) => c.sessions[widget.id] != p.sessions[widget.id],
-      builder: (c, s) {
-        return PopupMenuButton(
-          itemBuilder: (BuildContext context) =>
-              menus(c, s.sessions[widget.id]!.settings),
-          child: const Icon(Icons.more_horiz_rounded),
-        );
-      },
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(width: 16),
+        DefaultTextStyle(
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.black,
+          ),
+          child: title,
+        ),
+        const Spacer(),
+        PlatformAdaptive(
+          desktop: (c) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const WindowBarActions(),
+              Padding(
+                padding: const EdgeInsets.only(right: 12, bottom: 4),
+                child: SessionMenuButton(id: session.info.id, compat: true),
+              ),
+            ],
+          ),
+          web: (c) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: SessionMenuButton(id: session.info.id, compat: false),
+          ),
+        ),
+      ],
     );
   }
 
-  menus(BuildContext c, SessionSettings settings) {
-    return [
-      PopupMenuItem(
-        child: const Row(
-          children: [
-            Icon(Icons.edit_note_rounded),
-            SizedBox(width: 12),
-            Text("Edit Session")
-          ],
-        ),
-        onTap: () {},
-      ),
-      PopupMenuItem(
-        child: Row(
-          children: [
-            Icon(!settings.muted
-                ? Icons.volume_up_rounded
-                : Icons.volume_off_rounded),
-            const SizedBox(width: 12),
-            Text(settings.muted ? "Unmute" : "Mute"),
-          ],
-        ),
-        onTap: () {
-           SessionCubit.of(context).updateSessionSettings(
-                widget.id,
-                settings.copyWith(
-                  muted: !settings.muted,
-                ),
-              );
-        },
-      ),
-      PopupMenuItem(
-        child: Row(
-          children: [
-            Icon(
-              settings.pinned <= 0
-                  ? Icons.push_pin_rounded
-                  : Icons.push_pin_outlined,
-            ),
-            SizedBox(width: 12),
-            Text(settings.pinned > 0 ? "Unpin" : "Pin")
-          ],
-        ),
-        onTap: () {
-          SessionCubit.of(context).updateSessionSettings(
-                widget.id,
-                settings.copyWith(
-                  pinned: settings.pinned > 0
-                      ? 0
-                      : DateTime.now().millisecondsSinceEpoch,
-                ),
-              );
-        },
-      ),
-      PopupMenuItem(
-        child: Row(
-          children: [
-            const Icon(Icons.block_rounded),
-            SizedBox(width: 12),
-            Text(settings.blocked ? "Unblock" : "Block")
-          ],
-        ),
-        onTap: () {
-          SessionCubit.of(context).updateSessionSettings(
-                widget.id,
-                settings.copyWith(
-                  blocked: !settings.blocked,
-                ),
-              );
-        },
-      ),
-      PopupMenuItem(
-        child: const Row(
-          children: [
-            Icon(Icons.delete_rounded),
-            SizedBox(width: 12),
-            Text("Delete")
-          ],
-        ),
-        onTap: () {},
-      ),
-    ];
-  }
+  @override
+  Size get preferredSize => const Size.fromHeight(80);
 }

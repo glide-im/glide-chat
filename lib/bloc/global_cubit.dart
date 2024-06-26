@@ -22,6 +22,9 @@ class GlobalCubit extends Cubit<GlobalState> {
   GlobalCubit() : super(GlobalInitial());
 
   Future<GlobalState> init() async {
+    if (state.initialized) {
+      return state;
+    }
     await _init().forEach((log) {
       logd(tag, log);
     });
@@ -70,11 +73,13 @@ class GlobalCubit extends Cubit<GlobalState> {
     await DbCache.clear();
   }
 
+  @override
+  Future<void> close() {
+    logw(tag, ">>>>>> closed");
+    return super.close();
+  }
+
   Stream<String> _init() async* {
-    if (state.initialized) {
-      yield "already initialized";
-      return;
-    }
     stream.listen((event) {
       logd(tag, "state changed: $event");
     });

@@ -1,5 +1,25 @@
 part of 'session_page.dart';
 
+final today = DateTime.now();
+
+String getDisplayTime(DateTime d) {
+  if (d.year == today.year && d.month == today.month && d.day == today.day) {
+    return "${d.hour}:${d.minute}";
+  }
+  final span = (today.millisecondsSinceEpoch - d.millisecondsSinceEpoch);
+  final day = span / (1000 * 60 * 60 * 24);
+  if (day < 1) {
+    return "${d.hour}:${d.minute}";
+  }
+  if (day < 2) {
+    return "昨天 ${d.hour}:${d.minute}";
+  }
+  if (day < 3) {
+    return "前天 ${d.hour}:${d.minute}";
+  }
+  return "${d.month}/${d.day} ${d.hour}:${d.minute}";
+}
+
 class _ChatMessage extends StatelessWidget {
   final Message message;
   final SessionType type;
@@ -16,18 +36,18 @@ class _ChatMessage extends StatelessWidget {
 
   String get datetime {
     final d = DateTime.fromMillisecondsSinceEpoch(message.sendAt.toInt());
-    return "${d.hour}:${d.minute}";
+    return getDisplayTime(d);
   }
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
         _avatar(context),
         const SizedBox(width: 8),
-        Expanded(child: content(context)),
+        Expanded(child: _messageBody(context)),
         const SizedBox(width: 8),
         if (!self)
           const SizedBox(
@@ -92,20 +112,13 @@ class _ChatMessage extends StatelessWidget {
     }
   }
 
-  Widget content(BuildContext context) {
+  Widget _messageBody(BuildContext context) {
     return Column(
       crossAxisAlignment:
           self ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        UserInfoBuilder(
-          uid: uid,
-          builder: (c, info) => Text(
-            self ? datetime : "${info.name} $datetime",
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ),
         Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -115,21 +128,77 @@ class _ChatMessage extends StatelessWidget {
             Flexible(child: messageBox(context)),
           ],
         ),
+        UserInfoBuilder(
+          uid: uid,
+          builder: (c, info) => Text(
+            self ? datetime : "${info.name} $datetime",
+            style: context.textTheme.labelSmall?.copyWith(
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget messageBox(BuildContext context) {
-    return Container(
+    const r = Radius.circular(16);
+    return Material(
+      borderRadius: self
+          ? const BorderRadius.only(
+              topRight: r,
+              topLeft: Radius.circular(6),
+              bottomLeft: r,
+              bottomRight: Radius.circular(2),
+            )
+          : const BorderRadius.only(
+              topLeft: r,
+              topRight: Radius.circular(6),
+              bottomLeft: Radius.circular(2),
+              bottomRight: r,
+            ),
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      color: context.theme.secondaryHeaderColor,
+      elevation: 1,
+      child: textContent(),
+    );
+  }
+
+  Widget imageContent() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minHeight: 60,
+        minWidth: 100,
+        maxWidth: 300,
+        maxHeight: 200,
+      ),
+      child: Image.network(
+        message.content,
+        errorBuilder: (c, w, e) => Icon(
+          Icons.error_outline_rounded,
+          color: c.theme.colorScheme.error,
+        ),
+        loadingBuilder: (c, w, e) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              w,
+              if (e != null) const CircularProgressIndicator(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget textContent() {
+    return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: 12,
         vertical: 8,
       ),
-      decoration: BoxDecoration(
-        color: context.theme.primaryColorLight,
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
-      ),
       child: SelectableText(
+        contextMenuBuilder: null,
         displayMessage,
       ),
     );
