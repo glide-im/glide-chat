@@ -119,7 +119,9 @@ class GlobalCubit extends Cubit<GlobalState> {
     if (uc.token.isNotEmpty) {
       try {
         yield "token loaded, start token login";
-        final ab = await glide.tokenLogin(uc.token);
+        final ab = await glide.api.auth.loginToken(uc.token);
+        await glide.initCache(ab.uid.toString());
+        await glide.connect(ab);
         yield* _onLogin(ab);
       } catch (e, s) {
         yield "token login failed, $e, $s";

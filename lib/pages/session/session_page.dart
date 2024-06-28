@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/bloc/global_cubit.dart';
@@ -40,10 +39,13 @@ class SessionPage extends StatefulWidget {
 
 class _SessionPageState extends State<SessionPage> {
   late SessionCubit cubit;
+  bool exitSessionOnDispose = true;
 
   @override
   void initState() {
     setState(() {
+      exitSessionOnDispose =
+          GlobalCubit.of(context).state.platform == PlatformType.mobile;
       cubit = SessionCubit.of(context);
       cubit.setCurrentSession(widget.session.info.id);
     });
@@ -52,7 +54,9 @@ class _SessionPageState extends State<SessionPage> {
 
   @override
   void dispose() {
-    cubit.setCurrentSession("");
+    if (exitSessionOnDispose) {
+      cubit.setCurrentSession("");
+    }
     super.dispose();
   }
 
@@ -61,7 +65,10 @@ class _SessionPageState extends State<SessionPage> {
     return BlocProvider<_SessionCubit>(
       key: ValueKey(widget.session),
       create: (context) => _SessionCubit(widget.session.info),
-      child: _SessionPage(session: widget.session),
+      child: _SessionPage(
+        key: ValueKey(widget.session),
+        session: widget.session,
+      ),
     );
   }
 }
@@ -82,7 +89,16 @@ class _SessionPage extends StatelessWidget {
   Widget build2(BuildContext context, bool compact) {
     return Scaffold(
       appBar: titleBar(context, compact),
-      body: body(context),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            "assets/images/bg_chat.jpg",
+            repeat: ImageRepeat.repeat,
+          ),
+          body(context),
+        ],
+      ),
     );
   }
 
@@ -90,7 +106,11 @@ class _SessionPage extends StatelessWidget {
     if (compact) {
       return SessionBarMobile(title: title(), session: session);
     } else {
-      return SessionBarDesktop(title: title(), session: session);
+      return SessionBarDesktop(
+        key: Key(session.info.id),
+        title: title(),
+        session: session,
+      );
     }
   }
 
@@ -137,27 +157,27 @@ class _SessionPage extends StatelessWidget {
       children: [
         Expanded(
           flex: 1,
-          child: Container(
-            color: Colors.grey.shade50,
-            child: GestureDetector(
-              onTap: () {
-                FocusScope.of(context).unfocus();
-                context.read<_SessionCubit>().setEmojiVisibility(false);
+          child: GestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              context.read<_SessionCubit>().setEmojiVisibility(false);
+            },
+            child: BlocBuilder<_SessionCubit, _SessionState>(
+              buildWhen: (c, p) => c.messages != p.messages,
+              builder: (context, state) {
+                if (!state.initialized) {
+                  return const SizedBox();
+                }
+                if (state.messages.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "No messages yet...",
+                      style: context.theme.textTheme.bodyMedium,
+                    ),
+                  );
+                }
+                return messages(state.messages);
               },
-              child: BlocBuilder<_SessionCubit, _SessionState>(
-                buildWhen: (c, p) => c.messages != p.messages,
-                builder: (context, state) {
-                  if (state.messages.isEmpty) {
-                    return Center(
-                      child: Text(
-                        "No messages yet...",
-                        style: context.theme.textTheme.bodyMedium,
-                      ),
-                    );
-                  }
-                  return messages(state.messages);
-                },
-              ),
             ),
           ),
         ),
@@ -170,31 +190,32 @@ class _SessionPage extends StatelessWidget {
   }
 
   Widget messages(List<Message> messages) {
-    return Container(
-      color: Colors.grey.shade50,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        itemCount: messages.length,
-        reverse: true,
-        itemBuilder: (ctx, index) {
-          final msg = messages[index];
-          return Column(
-            children: [
-              const SizedBox(height: 12),
-              if (msg.type == 1 || msg.type == 11)
-                BlocBuilder<_SessionCubit, _SessionState>(
-                  buildWhen: (c, p) =>
-                      c.messageState[msg.mid] != p.messageState[msg.mid],
-                  builder: (context, state) {
-                    return _ChatMessage(message: msg, type: session.info.type);
-                  },
-                )
-              else
-                _ChipMessage(message: msg),
-            ],
-          );
-        },
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      itemCount: messages.length,
+      reverse: true,
+      itemBuilder: (ctx, index) {
+        final msg = messages[index];
+        return Column(
+          children: [
+            const SizedBox(height: 12),
+            if (msg.type == 1 || msg.type == 11)
+              BlocBuilder<_SessionCubit, _SessionState>(
+                buildWhen: (c, p) =>
+                    c.messageState[msg.mid] != p.messageState[msg.mid],
+                builder: (context, state) {
+                  return _ChatMessage(
+                    key: ValueKey(msg),
+                    message: msg,
+                    type: session.info.type,
+                  );
+                },
+              )
+            else
+              _ChipMessage(message: msg),
+          ],
+        );
+      },
     );
   }
 }

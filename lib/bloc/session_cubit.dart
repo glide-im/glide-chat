@@ -10,7 +10,7 @@ import 'global_cubit.dart';
 import 'session_state.dart';
 
 class SessionCubit extends Cubit<SessionState>
-    implements SessionEventInterceptor, GlideEventListener {
+    implements SessionEventInterceptor {
   final String tag = "SessionCubit";
 
   SessionCubit() : super(SessionState.init());
@@ -23,7 +23,6 @@ class SessionCubit extends Cubit<SessionState>
     if (state.initialized) {
       return;
     }
-    glide.setEventListener(this);
     glide.setSessionEventInterceptor(this);
     glide.setSessionCache(DbCache.instance.session);
     glide.setMessageCache(DbCache.instance.message);
@@ -35,6 +34,7 @@ class SessionCubit extends Cubit<SessionState>
         loge(tag, e);
       }
     });
+    initSession();
   }
 
   void updateSessionSettings(String id, SessionSettings settings) {
@@ -153,10 +153,5 @@ class SessionCubit extends Cubit<SessionState>
       loge(tag, e);
     }
     return si.copyWith(title: chatInfo?.name);
-  }
-
-  @override
-  void onCacheLoaded() {
-    initSession();
   }
 }

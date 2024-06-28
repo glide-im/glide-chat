@@ -1,23 +1,26 @@
 part of 'session_page.dart';
 
-final today = DateTime.now();
+final today = DateTime.now().copyWith(
+  hour: 0,
+  minute: 0,
+  second: 0,
+  millisecond: 0,
+);
+final yesterday = today.add(const Duration(days: -1));
+final day2Ago = today.add(const Duration(days: -2));
+final day3Ago = today.add(const Duration(days: -3));
 
 String getDisplayTime(DateTime d) {
-  if (d.year == today.year && d.month == today.month && d.day == today.day) {
-    return "${d.hour}:${d.minute}";
+  if (d.isBefore(day3Ago)) {
+    return d.toIso8601String().substring(11, 16);
   }
-  final span = (today.millisecondsSinceEpoch - d.millisecondsSinceEpoch);
-  final day = span / (1000 * 60 * 60 * 24);
-  if (day < 1) {
-    return "${d.hour}:${d.minute}";
+  if (d.isBefore(day2Ago)) {
+    return "2 days ago";
   }
-  if (day < 2) {
-    return "昨天 ${d.hour}:${d.minute}";
+  if (d.isBefore(today)) {
+    return "Yesterday at ${d.toIso8601String().substring(11, 16)}";
   }
-  if (day < 3) {
-    return "前天 ${d.hour}:${d.minute}";
-  }
-  return "${d.month}/${d.day} ${d.hour}:${d.minute}";
+  return d.toIso8601String().substring(11, 16);
 }
 
 class _ChatMessage extends StatelessWidget {
@@ -60,6 +63,7 @@ class _ChatMessage extends StatelessWidget {
 
   Widget _avatar(BuildContext context) {
     return SizedBox(
+      key: ValueKey(uid),
       height: 40,
       width: 40,
       child: self
@@ -71,7 +75,11 @@ class _ChatMessage extends StatelessWidget {
                 },
                 child: UserInfoBuilder(
                   uid: uid,
-                  builder: (c, info) => Avatar(title: abbr, url: info.avatar),
+                  builder: (c, info) => Avatar(
+                    key: ValueKey(info.id),
+                    title: abbr,
+                    url: info.avatar,
+                  ),
                 ),
               ),
               L: (c) => InkWell(
@@ -84,7 +92,11 @@ class _ChatMessage extends StatelessWidget {
                 },
                 child: UserInfoBuilder(
                   uid: uid,
-                  builder: (c, info) => Avatar(title: abbr, url: info.avatar),
+                  builder: (c, info) => Avatar(
+                    key: ValueKey(info.id),
+                    title: abbr,
+                    url: info.avatar,
+                  ),
                 ),
               ),
             ),
@@ -158,7 +170,7 @@ class _ChatMessage extends StatelessWidget {
               bottomRight: r,
             ),
       clipBehavior: Clip.antiAliasWithSaveLayer,
-      color: context.theme.secondaryHeaderColor,
+      color: context.theme.primaryColorLight,
       elevation: 1,
       child: textContent(),
     );

@@ -7,7 +7,10 @@ class MessageInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return build2(context);
+    return ColoredBox(
+      color: context.theme.colorScheme.surface,
+      child: build2(context),
+    );
   }
 
   Widget build2(BuildContext context) {

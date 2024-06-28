@@ -6,6 +6,7 @@ import 'package:glide_chat/bloc/session_state.dart';
 import 'package:glide_chat/pages/profile_content.dart';
 import 'package:glide_chat/pages/session/session_page.dart';
 import 'package:glide_chat/routes.dart';
+import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/adaptive.dart';
 import 'package:glide_chat/widget/session_list.dart';
@@ -80,6 +81,8 @@ class _SessionListBar extends StatelessWidget {
             child: WithGlideStateText(
               title: Text(
                 "Glide Chat",
+                maxLines: 1,
+                overflow: TextOverflow.fade,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
             ),

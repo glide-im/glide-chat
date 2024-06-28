@@ -43,11 +43,19 @@ class _GlideAppState extends State<GlideApp> {
       title: 'Glide Chat',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'Inter',
+        fontFamilyFallback: const [
+          'Inter',
+          'Microsoft YaHei',
+          'Noto Sans SC',
+          'Roboto'
+        ],
         colorScheme: ColorScheme(
           brightness: Brightness.light,
           primary: Colors.cyan.shade700,
           onPrimary: compact ? Colors.white : Colors.black,
           secondary: Colors.green,
+          secondaryContainer: Colors.green.shade100,
           onSecondary: Colors.white,
           tertiary: Colors.blue,
           error: Colors.red,

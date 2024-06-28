@@ -45,39 +45,44 @@ class HomePageDesktop extends StatelessWidget {
               final session =
                   SessionCubit.of(context).getSession(state.currentSession);
               if (session == null) {
-                return const SizedBox(
-                  height: double.infinity,
-                  width: double.infinity,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: WindowBarActions(),
-                      ),
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.stars_rounded,
-                              size: 80,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 16),
-                            Text("Select a session to start chat !")
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
+                return _NoSession();
               }
-              return SessionPage(session: session);
+              return SessionPage(key: ValueKey(session), session: session);
             },
           ),
         )
       ],
+    );
+  }
+}
+
+class _NoSession extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: double.infinity,
+      width: double.infinity,
+      child: ColoredBox(
+        color: context.theme.colorScheme.background,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Align(
+              alignment: Alignment.topRight,
+              child: WindowBarActions(),
+            ),
+            Center(
+              child: Image.asset(
+                'assets/images/app_icon.png',
+                width: 120,
+                height: 120,
+                color: context.theme.iconTheme.color?.withAlpha(128),
+                filterQuality: FilterQuality.high,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

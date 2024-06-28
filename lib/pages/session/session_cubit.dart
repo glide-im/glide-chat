@@ -126,7 +126,10 @@ class _SessionCubit extends Cubit<_SessionState> {
     sps.add(sp2);
     sps.add(sp3);
     final history = await session.history();
-    emit(state.copyWith(messages: [...history.reversed]));
+    emit(state.copyWith(
+      messages: [...history.reversed],
+      initialized: true,
+    ));
   }
 
   void setEmojiVisibility(bool show) {

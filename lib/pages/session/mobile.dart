@@ -56,37 +56,31 @@ class SessionBarMobile extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final statusHeight = MediaQuery.of(context).padding.top;
-    return Container(
-      decoration: BoxDecoration(
-        color: context.theme.primaryColor,
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 2,
-            spreadRadius: 1,
-          )
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+    return Material(
+      color: context.theme.colorScheme.primary,
+      elevation: 6,
       child: Padding(
-        padding: EdgeInsets.only(top: statusHeight),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            BackButton(color: context.theme.colorScheme.onPrimary),
-            const SizedBox(width: 8),
-            DefaultTextStyle(
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-                color: context.theme.colorScheme.onPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        child: Padding(
+          padding: EdgeInsets.only(top: statusHeight),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              BackButton(color: context.theme.colorScheme.onPrimary),
+              const SizedBox(width: 8),
+              DefaultTextStyle(
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  color: context.theme.colorScheme.onPrimary,
+                ),
+                child: title,
               ),
-              child: title,
-            ),
-            const Spacer(),
-            const SizedBox(width: 16),
-            SessionMenuButton(id: session.info.id, compat: false),
-          ],
+              const Spacer(),
+              const SizedBox(width: 16),
+              SessionMenuButton(id: session.info.id, compat: false),
+            ],
+          ),
         ),
       ),
     );
