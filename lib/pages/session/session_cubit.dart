@@ -150,6 +150,22 @@ class _SessionCubit extends Cubit<_SessionState> {
     );
   }
 
+  void sendFile(File file) async {
+    try {
+      final name = file.path.split(Platform.pathSeparator).last;
+      final size = await file.length();
+      final body = FileMessageBody(
+        name: name,
+        url: file.path,
+        size: size,
+        type: FileMessageType.unknown,
+      );
+      await session.sendFileMessage(body);
+    } catch (e, s) {
+      logd(tag, s);
+    }
+  }
+
   void sendMessage() async {
     final content = state.textController.text;
     emit(state.copyWith(

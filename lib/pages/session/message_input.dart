@@ -125,6 +125,7 @@ class MessageInput extends StatelessWidget {
             if (result != null) {
               File file = File(result.files.single.path!);
               logd("tag", file.path);
+              if (context.mounted) context.read<_SessionCubit>().sendFile(file);
             } else {
               // User canceled the picker
             }

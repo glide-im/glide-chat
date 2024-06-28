@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/bloc/session_cubit.dart';
 import 'package:glide_chat/bloc/session_state.dart';
+import 'package:glide_chat/cache/app_cache.dart';
+import 'package:glide_chat/model/chat_info.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/utils/logger.dart';
@@ -176,7 +178,10 @@ class _SessionPage extends StatelessWidget {
                     ),
                   );
                 }
-                return messages(state.messages);
+                return SessionMessageList(
+                  messages: state.messages,
+                  sessionType: session.info.type,
+                );
               },
             ),
           ),
@@ -188,35 +193,52 @@ class _SessionPage extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget messages(List<Message> messages) {
+class SessionMessageList extends StatelessWidget {
+  final List<Message> messages;
+  final SessionType sessionType;
+
+  const SessionMessageList({
+    super.key,
+    required this.messages,
+    required this.sessionType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       itemCount: messages.length,
       reverse: true,
       itemBuilder: (ctx, index) {
         final msg = messages[index];
-        return Column(
-          children: [
-            const SizedBox(height: 12),
-            if (msg.type == 1 || msg.type == 11)
-              BlocBuilder<_SessionCubit, _SessionState>(
-                buildWhen: (c, p) =>
-                    c.messageState[msg.mid] != p.messageState[msg.mid],
-                builder: (context, state) {
-                  return _ChatMessage(
-                    key: ValueKey(msg),
-                    message: msg,
-                    type: session.info.type,
-                  );
-                },
-              )
-            else
-              _ChipMessage(message: msg),
-          ],
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: item(msg),
         );
       },
     );
+  }
+
+  Widget item(Message msg) {
+    switch (msg.type) {
+      case ChatMessageType.enter:
+      case ChatMessageType.leave:
+        return _Chip(message: msg);
+      default:
+        return BlocBuilder<_SessionCubit, _SessionState>(
+          buildWhen: (c, p) =>
+              c.messageState[msg.mid] != p.messageState[msg.mid],
+          builder: (context, state) {
+            return _ChatMessage(
+              key: ValueKey(msg),
+              message: msg,
+              sessionType: sessionType,
+            );
+          },
+        );
+    }
   }
 }
 

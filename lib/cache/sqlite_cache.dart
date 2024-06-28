@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 import 'package:path_provider/path_provider.dart';
@@ -272,18 +274,24 @@ class _MessageSQLiteCache implements GlideMessageCache {
   @override
   Future<void> addMessage(String sessionId, Message message) async {
     logd(tag, "insert message, $sessionId ${message.mid}");
+    String content;
+    if (!message.type.isTextBody()) {
+      content = const JsonEncoder().convert(message.content);
+    } else {
+      content = message.content as String;
+    }
     db.execute("""
     INSERT INTO `message` VALUES (?,?,?,?,?,?,?,?,?,?);
     """, [
-      message.status.index,
+      message.status.value,
       message.mid,
       message.cliMid,
-      message.type,
+      message.type.value,
       message.from,
       message.to,
       message.seq,
       message.sendAt,
-      message.content,
+      content,
       sessionId,
     ]);
   }
@@ -294,18 +302,28 @@ class _MessageSQLiteCache implements GlideMessageCache {
         db.select("SELECT * FROM `message` WHERE `session_id`=?;", [sessionId]);
     final ms = <Message>[];
     for (var row in res.rows) {
-      final status = MessageStatus.values[row[0] as int];
-      ms.add(Message(
-        status,
+      final status = MessageStatus.valueOf(row[0] as int);
+      final type = ChatMessageType.of(row[3] as num);
+      dynamic content = row[8] as String;
+      if (!type.isTextBody()) {
+        content = const JsonDecoder().convert(content);
+      }
+      final m = Message(
+        status: status,
         mid: row[1] as num,
         cliMid: row[2] as String,
-        type: row[3] as num,
+        type: type,
         from: row[4] as String,
         to: row[5] as String,
         seq: row[6] as num,
         sendAt: row[7] as num,
-        content: row[8] as String,
-      ));
+        content: content,
+      );
+      if (m.validate()){
+        ms.add(m);
+      }else{
+        logw(tag, 'invalid message: $m');
+      }
     }
     return ms;
   }
@@ -323,18 +341,22 @@ class _MessageSQLiteCache implements GlideMessageCache {
       return null;
     }
     final row = res.values;
-
-    final status = MessageStatus.values[row[0] as int];
+    final status = MessageStatus.valueOf(row[0] as int);
+    final type = ChatMessageType.of(row[3] as int);
+    dynamic content = row[8] as String;
+    if (!type.isTextBody()) {
+      content = const JsonDecoder().convert(content);
+    }
     return Message(
-      status,
+      status: status,
       mid: row[1] as num,
       cliMid: row[2] as String,
-      type: row[3] as num,
+      type: type,
       from: row[4] as String,
       to: row[5] as String,
       seq: row[6] as num,
       sendAt: row[7] as num,
-      content: row[8] as String,
+      content: content,
     );
   }
 
@@ -355,19 +377,23 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future<void> updateMessage(Message message) async {
+    dynamic cnt = message.content;
+    if (!message.type.isTextBody()) {
+      cnt = const JsonEncoder().convert(cnt);
+    }
     db.execute("""
      UPDATE `message` SET  
      `status`=?, `cli_mid`=?, `type`=?, `from`=?, `to`=?, `seq`=?, `send_at`=?, `content`=?
      WHERE `mid`=?;
     """, [
-      message.status.index,
+      message.status.value,
       message.cliMid,
-      message.type,
+      message.type.value,
       message.from,
       message.to,
       message.seq,
       message.sendAt,
-      message.content,
+      cnt,
       message.mid,
     ]);
   }
