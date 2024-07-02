@@ -1,7 +1,13 @@
 import 'package:glide_chat/cache/sqlite_cache.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
-class BufferedSessionCache implements SessionListCache {
+abstract class SessionSettingCache {
+  Future<String?> getSetting(String id);
+
+  Future setSetting(String id, String value);
+}
+
+class BufferedSessionCache implements SessionListCache, SessionSettingCache {
   static final _memoryCache = SessionListMemoryCache();
   SessionListCache? _memory;
   final tag = "SessionCache";
@@ -43,6 +49,17 @@ class BufferedSessionCache implements SessionListCache {
   @override
   Future<void> updateSession(GlideSessionInfo session) async {
     await _memory!.updateSession(session);
+  }
+
+  @override
+  Future<String?> getSetting(String id) async {
+    final r = await SQLiteCache.instance.sessionSettingCache.getSessionSetting(id);
+    return r.isEmpty ? null : r;
+  }
+
+  @override
+  Future setSetting(String id, String value) async {
+    await SQLiteCache.instance.sessionSettingCache.updateSessionSetting(id, value);
   }
 }
 

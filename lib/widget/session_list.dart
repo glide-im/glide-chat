@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/bloc/session_cubit.dart';
 import 'package:glide_chat/bloc/session_state.dart';
-import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/extensions.dart';
-import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
 import 'avatar.dart';
 
@@ -40,9 +37,7 @@ class _SessionListViewState extends State<SessionListView> {
               child: Text("No sessions yet...", style: TextStyle(fontSize: 16)),
             );
           }
-          final sessions = state.sessions.values.toList();
-          sessions.sort((a, b) => (b.info.updateAt - a.info.updateAt).toInt());
-
+          final sessions = state.sessionListSorted();
           final key = sessions.map((e) => e.info.id).join();
           return ListView.builder(
             key: Key(key),
@@ -56,7 +51,7 @@ class _SessionListViewState extends State<SessionListView> {
                         p.currentSession == session.info.id),
                 builder: (context, state) {
                   return _Session(
-                    session: session.info,
+                    session: session,
                     selected: state.currentSession == session.info.id,
                   );
                 },
@@ -70,43 +65,65 @@ class _SessionListViewState extends State<SessionListView> {
 }
 
 class _Session extends StatelessWidget {
-  final GlideSessionInfo session;
+  final Session session;
   final bool selected;
 
   const _Session({required this.session, required this.selected});
 
+  String get updateAt {
+    final date = DateTime.fromMicrosecondsSinceEpoch(
+        session.info.updateAt.toInt() * 1000);
+    if (date.isToday()) {
+      return date.timeString();
+    } else if (date.isYesterday()) {
+      return "Yesterday";
+    } else {
+      return date.dateString();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    Color? color = selected ? context.theme.primaryColorLight : null;
+    if (session.settings.pinned > 0 && color == null) {
+      color = context.theme.hoverColor.withAlpha(8);
+    }
     return GestureDetector(
       onSecondaryTap: () {
         // show menu
       },
-      child: ColoredBox(
-        color: selected ? context.theme.primaryColorLight : Colors.transparent,
-        child: build2(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: color,
+          ),
+          child: build2(context),
+        ),
       ),
     );
   }
 
   Widget build2(BuildContext context) {
     return InkWell(
+      borderRadius: BorderRadius.circular(10),
       child: ListTile(
         isThreeLine: false,
         leading: SizedBox(
           height: 40,
           width: 40,
-          child: SessionAvatar(session: session),
+          child: SessionAvatar(session: session.info),
         ),
-        trailing:
-            session.unread > 0 ? _UnreadCount(count: session.unread) : null,
+        trailing: trailing(context),
         title: Text(
-          session.title,
+          session.info.title,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          session.lastMessage,
+          session.info.lastMessage,
           style: const TextStyle(
             color: Colors.grey,
             fontSize: 12,
@@ -116,8 +133,48 @@ class _Session extends StatelessWidget {
         ),
       ),
       onTap: () {
-        SessionCubit.of(context).goSession(context, session);
+        SessionCubit.of(context).goSession(context, session.info);
       },
+    );
+  }
+
+  Widget? trailing(BuildContext context) {
+    Widget? badge;
+    if (session.settings.blocked) {
+      badge = const Icon(Icons.block, color: Colors.grey, size: 16);
+    } else {
+      if (session.settings.muted) {
+        badge = const Icon(Icons.volume_off, color: Colors.grey, size: 16);
+      } else {
+        final unread = session.info.unread;
+        badge = unread > 0 ? _UnreadCount(count: unread) : null;
+      }
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Text(
+          updateAt,
+          style: TextStyle(
+            fontSize: 12,
+            color: context.theme.hintColor,
+          ),
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          height: 24,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (session.settings.pinned > 0)
+                const Icon(Icons.push_pin, color: Colors.grey, size: 16),
+              if (badge != null) badge,
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

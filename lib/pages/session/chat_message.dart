@@ -1,26 +1,13 @@
 part of 'session_page.dart';
 
-final today = DateTime.now().copyWith(
-  hour: 0,
-  minute: 0,
-  second: 0,
-  millisecond: 0,
-);
-final yesterday = today.add(const Duration(days: -1));
-final day2Ago = today.add(const Duration(days: -2));
-final day3Ago = today.add(const Duration(days: -3));
-
 String getDisplayTime(DateTime d) {
-  if (d.isBefore(day3Ago)) {
-    return d.toIso8601String().substring(11, 16);
+  if (d.isToday()) {
+    return d.timeString();
+  } else if (d.isYesterday()) {
+    return "Yesterday ${d.timeString()}";
+  } else {
+    return d.dateString();
   }
-  if (d.isBefore(day2Ago)) {
-    return "2 days ago";
-  }
-  if (d.isBefore(today)) {
-    return "Yesterday at ${d.toIso8601String().substring(11, 16)}";
-  }
-  return d.toIso8601String().substring(11, 16);
 }
 
 class _ChatMessage extends StatelessWidget {

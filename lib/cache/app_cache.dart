@@ -3,13 +3,12 @@ import 'dart:convert';
 import 'package:glide_chat/bloc/global_cubit.dart';
 import 'package:glide_chat/cache/session_cache.dart';
 import 'package:glide_chat/model/chat_info.dart';
-import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class DbCache {
-  SessionListCache session = BufferedSessionCache();
+  BufferedSessionCache session = BufferedSessionCache();
   GlideMessageCache message = BufferedMessageCache();
   static const tag = "AppCache";
 

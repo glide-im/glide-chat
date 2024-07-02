@@ -250,26 +250,26 @@ class SessionMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SessionCubit, SessionState>(
-      buildWhen: (c, p) => c.sessionUpdated(p, id),
-      builder: (c, s) {
-        return IconButtonTheme(
-          data: IconButtonThemeData(
-            style: ButtonStyle(
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              fixedSize: const MaterialStatePropertyAll(null),
-              minimumSize: const MaterialStatePropertyAll(Size.zero),
-              iconColor: MaterialStateProperty.all(
-                context.theme.colorScheme.onPrimary,
-              ),
-            ),
+    return IconButtonTheme(
+      data: IconButtonThemeData(
+        style: ButtonStyle(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          fixedSize: const MaterialStatePropertyAll(null),
+          minimumSize: const MaterialStatePropertyAll(Size.zero),
+          iconColor: MaterialStateProperty.all(
+            context.theme.colorScheme.onPrimary,
           ),
-          child: PopupMenuButton(
+        ),
+      ),
+      child: BlocBuilder<SessionCubit, SessionState>(
+        buildWhen: (c, p) => c.sessionVersion != p.sessionVersion,
+        builder: (c, s) {
+          return PopupMenuButton(
             itemBuilder: (ctx) => menus(ctx, s.sessions[id]!.settings),
             iconSize: compat ? 18 : null,
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -288,7 +288,7 @@ class SessionMenuButton extends StatelessWidget {
       PopupMenuItem(
         child: Row(
           children: [
-            Icon(!settings.muted
+            Icon(settings.muted
                 ? Icons.volume_up_rounded
                 : Icons.volume_off_rounded),
             const SizedBox(width: 12),
@@ -296,12 +296,7 @@ class SessionMenuButton extends StatelessWidget {
           ],
         ),
         onTap: () {
-          SessionCubit.of(context).updateSessionSettings(
-            id,
-            settings.copyWith(
-              muted: !settings.muted,
-            ),
-          );
+          SessionCubit.of(context).toggleMute(id);
         },
       ),
       PopupMenuItem(
@@ -312,36 +307,24 @@ class SessionMenuButton extends StatelessWidget {
                   ? Icons.push_pin_rounded
                   : Icons.push_pin_outlined,
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(settings.pinned > 0 ? "Unpin" : "Pin")
           ],
         ),
         onTap: () {
-          SessionCubit.of(context).updateSessionSettings(
-            id,
-            settings.copyWith(
-              pinned: settings.pinned > 0
-                  ? 0
-                  : DateTime.now().millisecondsSinceEpoch,
-            ),
-          );
+          SessionCubit.of(context).togglePin(id);
         },
       ),
       PopupMenuItem(
         child: Row(
           children: [
             const Icon(Icons.block_rounded),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(settings.blocked ? "Unblock" : "Block")
           ],
         ),
         onTap: () {
-          SessionCubit.of(context).updateSessionSettings(
-            id,
-            settings.copyWith(
-              blocked: !settings.blocked,
-            ),
-          );
+          SessionCubit.of(context).toggleBlock(id);
         },
       ),
       PopupMenuItem(
@@ -352,7 +335,9 @@ class SessionMenuButton extends StatelessWidget {
             Text("Delete")
           ],
         ),
-        onTap: () {},
+        onTap: () {
+          SessionCubit.of(context).deleteSession(id);
+        },
       ),
     ];
   }

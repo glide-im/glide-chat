@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/cache/app_cache.dart';
@@ -13,7 +15,11 @@ class SessionCubit extends Cubit<SessionState>
     implements SessionEventInterceptor {
   final String tag = "SessionCubit";
 
-  SessionCubit() : super(SessionState.init());
+  SessionCubit() : super(SessionState.init()) {
+    stream.listen((event) {
+      logd(tag, "[Updated] $event");
+    });
+  }
 
   static SessionCubit of(BuildContext context) {
     return context.read();
@@ -37,20 +43,60 @@ class SessionCubit extends Cubit<SessionState>
     initSession();
   }
 
-  void updateSessionSettings(String id, SessionSettings settings) {
+  void updateSessionSettings(String id, SessionSettings settings) async {
     final sessions = {...state.sessions};
     sessions[id] = sessions[id]!.copyWith(settings: settings);
-    emit(state.copyWith(sessions: sessions));
+    final json = jsonEncode(settings.toMap());
+    await DbCache.instance.session.setSetting(id, json);
+    emit(state.copyWith(
+      sessions: sessions,
+      sessionVersion: state.sessionVersion + 1,
+    ));
   }
 
   Session? getSession(String id) {
     return state.sessions[id];
   }
 
+  Future toggleMute(String id) async {
+    final settings = state.sessions[id]!.settings;
+    final ns = settings.copyWith(muted: !settings.muted);
+    updateSessionSettings(id, ns);
+  }
+
+  Future togglePin(String id) async {
+    SessionSettings settings = state.sessions[id]!.settings;
+    if (settings.pinned == 0) {
+      settings =
+          settings.copyWith(pinned: DateTime.now().millisecondsSinceEpoch);
+    } else {
+      settings = settings.copyWith(pinned: 0);
+    }
+    updateSessionSettings(id, settings);
+  }
+
+  Future toggleBlock(String id) async {
+    final settings = state.sessions[id]!.settings;
+    final ns = settings.copyWith(blocked: !settings.blocked);
+    updateSessionSettings(id, ns);
+  }
+
+  Future deleteSession(String id) async {
+    final current = state.currentSession == id ? "" : state.currentSession;
+    await glide.sessionManager.delete(id, false);
+    final sessions = {...state.sessions};
+    sessions.remove(id);
+    emit(state.copyWith(
+      currentSession: current,
+      sessions: sessions,
+      sessionVersion: state.sessionVersion + 1,
+    ));
+  }
+
   Future<Session> createSession(String id, bool channel) async {
     final s = await glide.sessionManager
         .create(id, channel ? SessionType.channel : SessionType.chat);
-    final ss = Session(info: s.info, settings: SessionSettings.def());
+    final ss = Session(info: s.info, settings: await _getSessionSetting(id));
     state.sessions[id] = ss;
     return ss;
   }
@@ -91,7 +137,8 @@ class SessionCubit extends Cubit<SessionState>
     final ss = await glide.sessionManager.getSessions();
     final sessions = <String, Session>{};
     for (final s in ss) {
-      final ns = Session(info: s.info, settings: SessionSettings.def());
+      final st = await _getSessionSetting(s.info.id);
+      final ns = Session(info: s.info, settings: st);
       sessions[s.info.id] = ns;
     }
     emit(state.copyWith(
@@ -100,13 +147,21 @@ class SessionCubit extends Cubit<SessionState>
     ));
   }
 
+  Future<SessionSettings> _getSessionSetting(String id) async {
+    final ss = await DbCache.instance.session.getSetting(id);
+    if (ss == null) {
+      return SessionSettings.def();
+    }
+    return SessionSettings.fromMap(jsonDecode(ss));
+  }
+
   void _onSessionEvent(SessionEvent event) async {
     final session = await glide.sessionManager.get(event.id);
     final ses = {...state.sessions};
     switch (event.type) {
       case SessionEventType.sessionAdded:
-        ses[session!.info.id] =
-            Session(info: session.info, settings: SessionSettings.def());
+        final st = await _getSessionSetting(event.id);
+        ses[session!.info.id] = Session(info: session.info, settings: st);
         emit(state.copyWith(sessions: ses));
         if (session.info.id == 'the_world_channel') {
           session.sendTextMessage("Hi");
@@ -118,7 +173,10 @@ class SessionCubit extends Cubit<SessionState>
         break;
       case SessionEventType.sessionUpdated:
         final old = ses[event.id] ??
-            Session(info: session!.info, settings: SessionSettings.def());
+            Session(
+              info: session!.info,
+              settings: await _getSessionSetting(event.id),
+            );
         ses[session!.info.id] = old.copyWith(info: session.info);
         break;
     }
@@ -153,5 +211,57 @@ class SessionCubit extends Cubit<SessionState>
       loge(tag, e);
     }
     return si.copyWith(title: chatInfo?.name);
+  }
+
+  @override
+  Future<String?> onUpdateLastMessage(GlideSessionInfo si, Message cm) async {
+    String content = "";
+    switch (cm.type) {
+      case ChatMessageType.markdown:
+      case ChatMessageType.text:
+        content = cm.content;
+        break;
+      case ChatMessageType.image:
+        content = "[Image]";
+        break;
+      case ChatMessageType.file:
+        content = "[File]";
+        break;
+      case ChatMessageType.location:
+        content = "[Location]";
+        break;
+      case ChatMessageType.voice:
+        content = "[Voice]";
+        break;
+      case ChatMessageType.video:
+        content = "[Video]";
+        break;
+      case ChatMessageType.custom:
+        content = "[Message]";
+      case ChatMessageType.enter:
+        final from = await ChatInfoManager.load(false, cm.from);
+        content = "${from.name} joined the channel";
+        break;
+      case ChatMessageType.leave:
+        final from = await ChatInfoManager.load(false, cm.from);
+        content = "${from.name} left the channel";
+        break;
+      case ChatMessageType.unknown:
+        content = "[Unknown]";
+        break;
+    }
+    if (si.type == SessionType.channel) {
+      if (cm.from == glide.uid()) {
+        content = "Me: $content";
+      } else if (cm.from != 'system') {
+        final from = await ChatInfoManager.load(false, cm.from);
+        content = "${from.name}: $content";
+      }
+    } else {
+      if (cm.from == glide.uid()) {
+        content = "Me: $content";
+      }
+    }
+    return content;
   }
 }

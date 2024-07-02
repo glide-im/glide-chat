@@ -22,8 +22,10 @@ class SessionState {
     );
   }
 
-  bool sessionUpdated(SessionState other, String id){
-    return sessionVersion != other.sessionVersion && sessions[id] != other.sessions[id];
+  List<Session> sessionListSorted() {
+    final sessions = this.sessions.values.toList();
+    sessions.sort((a, b) => a.compareTo(b));
+    return sessions;
   }
 
   SessionState copyWith({
@@ -39,9 +41,14 @@ class SessionState {
       initialized: initialized ?? this.initialized,
     );
   }
+
+  @override
+  String toString() {
+    return 'SessionState{sessions: $sessions, currentSession: $currentSession, sessionVersion: $sessionVersion, initialized: $initialized}';
+  }
 }
 
-class Session {
+class Session implements Comparable<Session> {
   final GlideSessionInfo info;
   final SessionSettings settings;
 
@@ -55,6 +62,15 @@ class Session {
       info: info ?? this.info,
       settings: settings ?? this.settings,
     );
+  }
+
+  @override
+  int compareTo(Session other) {
+    final pinned = other.settings.pinned.compareTo(settings.pinned);
+    if (pinned != 0) {
+      return pinned;
+    }
+    return other.info.updateAt.compareTo(info.updateAt);
   }
 }
 
@@ -86,6 +102,24 @@ class SessionSettings {
       pinned: pinned ?? this.pinned,
       remark: remark ?? this.remark,
       blocked: blocked ?? this.blocked,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'muted': muted,
+      'pinned': pinned,
+      'remark': remark,
+      'blocked': blocked,
+    };
+  }
+
+  factory SessionSettings.fromMap(Map<String, dynamic> map) {
+    return SessionSettings(
+      muted: map['muted'] as bool,
+      pinned: map['pinned'] as num,
+      remark: map['remark'] as String,
+      blocked: map['blocked'] as bool,
     );
   }
 }

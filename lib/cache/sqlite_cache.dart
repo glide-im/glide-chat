@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:glide_chat/utils/logger.dart';
@@ -183,10 +184,10 @@ class _SQL {
   );
   ''';
   static const updateSessionSetting = '''
-  INSERT INTO `session_setting` VALUES (?, ?) ON DUPLICATE KEY UPDATE `setting`=VALUES(?);
+  INSERT OR REPLACE INTO `session_setting` (`id`, `setting`) VALUES (?, ?);
   ''';
   static const selectSessionSetting = '''
-  DELETE FROM `session_setting` WHERE id = ?;
+  SELECT * FROM `session_setting` WHERE `id` = ?;
   ''';
   static const deleteSessionSetting = '''
   DROP TABLE IF EXISTS `session_setting`;
@@ -319,9 +320,9 @@ class _MessageSQLiteCache implements GlideMessageCache {
         sendAt: row[7] as num,
         content: content,
       );
-      if (m.validate()){
+      if (m.validate()) {
         ms.add(m);
-      }else{
+      } else {
         logw(tag, 'invalid message: $m');
       }
     }
@@ -404,16 +405,16 @@ class SessionSettingCache {
 
   SessionSettingCache({required this.db});
 
-  Future<String> getSetting(String id) async {
-    final result = db.select(_SQL.selectSessionSetting, [id]);
-    return result.rows.first[0].toString();
+  Future<String> getSessionSetting(String id) async {
+    final result = db.select(_SQL.selectSessionSetting, [id]).firstOrNull;
+    return result?.values[1] as String? ?? "";
   }
 
-  Future updateSetting(String id, String setting) async {
-    db.execute(_SQL.updateSessionSetting, [id, setting, setting]);
+  Future updateSessionSetting(String id, String setting) async {
+    db.execute(_SQL.updateSessionSetting, [id, setting]);
   }
 
-  Future clear() async {
+  Future clearAllSessionSetting() async {
     db.execute(_SQL.deleteSessionSetting);
   }
 }
