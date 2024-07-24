@@ -41,6 +41,7 @@ class _SessionListViewState extends State<SessionListView> {
           final key = sessions.map((e) => e.info.id).join();
           return ListView.builder(
             key: Key(key),
+            padding: const EdgeInsets.only(top: 6),
             itemCount: sessions.length,
             itemBuilder: (context, index) {
               final session = sessions[index];

@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/widget/adaptive.dart';
@@ -141,10 +139,25 @@ class WindowBar extends StatelessWidget {
   }
 }
 
-class WindowBarActions extends StatelessWidget {
+class WindowBarActions extends StatefulWidget {
   const WindowBarActions({super.key});
 
-  static bool pinTop = false;
+  @override
+  State<WindowBarActions> createState() => _WindowBarActionsState();
+}
+
+class _WindowBarActionsState extends State<WindowBarActions> {
+  bool pinTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WindowManager.instance.isAlwaysOnTop().then((value) {
+      setState(() {
+        pinTop = value;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,14 +172,18 @@ class WindowBarActions extends StatelessWidget {
           children: [
             InkWell(
               onTap: () {
-                pinTop = !pinTop;
-                WindowManager.instance.setAlwaysOnTop(!pinTop);
+                setState(() {
+                  pinTop = !pinTop;
+                  WindowManager.instance.setAlwaysOnTop(pinTop);
+                });
               },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 child: RotatedBox(
-                  quarterTurns: 1,
-                  child: Icon(Icons.push_pin_outlined),
+                  quarterTurns: 0,
+                  child: Icon(Icons.push_pin_outlined,
+                      color:
+                          pinTop ? context.theme.colorScheme.secondary : null),
                 ),
               ),
             ),

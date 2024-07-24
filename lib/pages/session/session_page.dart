@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/bloc/global_cubit.dart';
@@ -30,6 +32,8 @@ part 'mobile.dart';
 
 part 'session_cubit.dart';
 
+part 'session_info.dart';
+
 class SessionPage extends StatefulWidget {
   final Session session;
 
@@ -42,12 +46,14 @@ class SessionPage extends StatefulWidget {
 class _SessionPageState extends State<SessionPage> {
   late SessionCubit cubit;
   bool exitSessionOnDispose = true;
+  bool showSessionInfo = false;
+
+  Session get session => widget.session;
 
   @override
   void initState() {
     setState(() {
-      exitSessionOnDispose =
-          GlobalCubit.of(context).state.platform == PlatformType.mobile;
+      exitSessionOnDispose = GlobalCubit.of(context).state.compact;
       cubit = SessionCubit.of(context);
       cubit.setCurrentSession(widget.session.info.id);
     });
@@ -67,24 +73,10 @@ class _SessionPageState extends State<SessionPage> {
     return BlocProvider<_SessionCubit>(
       key: ValueKey(widget.session),
       create: (context) => _SessionCubit(widget.session.info),
-      child: _SessionPage(
-        key: ValueKey(widget.session),
-        session: widget.session,
+      child: Adaptive(
+        builder: (c) => build2(c, true),
+        L: (c) => build2(c, false),
       ),
-    );
-  }
-}
-
-class _SessionPage extends StatelessWidget {
-  final Session session;
-
-  const _SessionPage({super.key, required this.session});
-
-  @override
-  Widget build(BuildContext context) {
-    return Adaptive(
-      builder: (c) => build2(c, true),
-      L: (c) => build2(c, false),
     );
   }
 
@@ -98,7 +90,22 @@ class _SessionPage extends StatelessWidget {
             "assets/images/bg_chat.jpg",
             repeat: ImageRepeat.repeat,
           ),
-          body(context),
+          if (compact) body(context),
+          if (!compact)
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: body(context)),
+                if (showSessionInfo) const VerticalDivider(),
+                if (showSessionInfo)
+                  Container(
+                    width: 200,
+                    color: context.theme.scaffoldBackgroundColor,
+                    child: SessionInfo(session: session),
+                  )
+              ],
+            ),
         ],
       ),
     );
@@ -106,19 +113,24 @@ class _SessionPage extends StatelessWidget {
 
   PreferredSizeWidget titleBar(BuildContext context, bool compact) {
     if (compact) {
-      return SessionBarMobile(title: title(), session: session);
+      return SessionBarMobile(title: titleText(), session: session);
     } else {
       return SessionBarDesktop(
         key: Key(session.info.id),
-        title: title(),
+        title: titleText(),
         session: session,
+        onTitleTap: () {
+          setState(() {
+            showSessionInfo = !showSessionInfo;
+          });
+        },
       );
     }
   }
 
-  Widget title() {
+  Widget titleText() {
     return BlocBuilder<_SessionCubit, _SessionState>(
-      buildWhen: (c, p) => c.info.title != p.info.title,
+      buildWhen: (c, p) => c.info.title != p.info.title || c.typing != p.typing,
       builder: (context, state) {
         return WithGlideStateText(
           title: Row(
@@ -126,26 +138,15 @@ class _SessionPage extends StatelessWidget {
             children: [
               Text(state.info.title),
               const SizedBox(width: 12),
-              typingState(),
+              if (state.typing)
+                Text(
+                  "Typing...",
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: context.theme.colorScheme.onPrimary,
+                  ),
+                ),
             ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget typingState() {
-    return BlocBuilder<_SessionCubit, _SessionState>(
-      buildWhen: (c, p) => c.typing != p.typing,
-      builder: (context, state) {
-        if (!state.typing) {
-          return const SizedBox();
-        }
-        return Text(
-          "Typing...",
-          style: TextStyle(
-            fontSize: 10,
-            color: context.theme.colorScheme.onPrimary,
           ),
         );
       },
@@ -164,26 +165,7 @@ class _SessionPage extends StatelessWidget {
               FocusScope.of(context).unfocus();
               context.read<_SessionCubit>().setEmojiVisibility(false);
             },
-            child: BlocBuilder<_SessionCubit, _SessionState>(
-              buildWhen: (c, p) => c.messages != p.messages,
-              builder: (context, state) {
-                if (!state.initialized) {
-                  return const SizedBox();
-                }
-                if (state.messages.isEmpty) {
-                  return Center(
-                    child: Text(
-                      "No messages yet...",
-                      style: context.theme.textTheme.bodyMedium,
-                    ),
-                  );
-                }
-                return SessionMessageList(
-                  messages: state.messages,
-                  sessionType: session.info.type,
-                );
-              },
-            ),
+            child: const _SessionMessageList(),
           ),
         ),
         Adaptive(
@@ -191,6 +173,34 @@ class _SessionPage extends StatelessWidget {
           L: (c) => const MessageInput(),
         )
       ],
+    );
+  }
+}
+
+class _SessionMessageList extends StatelessWidget {
+  const _SessionMessageList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<_SessionCubit, _SessionState>(
+      buildWhen: (c, p) => c.messages != p.messages,
+      builder: (context, state) {
+        if (!state.initialized) {
+          return const SizedBox();
+        }
+        if (state.messages.isEmpty) {
+          return Center(
+            child: Text(
+              "No messages yet...",
+              style: context.theme.textTheme.bodyMedium,
+            ),
+          );
+        }
+        return SessionMessageList(
+          messages: state.messages,
+          sessionType: state.info.type,
+        );
+      },
     );
   }
 }

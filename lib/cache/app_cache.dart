@@ -50,6 +50,9 @@ class ChatInfoManager {
     if (channel) {
       return ChatInfo(id: id, name: id, avatar: "", lastSee: 0);
     } else {
+      if (id == "system"){
+        c = ChatInfo(id: id, name: "system", avatar: "", lastSee: 0);
+      }
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final json = prefs.getString(key);
       if (json != null) {

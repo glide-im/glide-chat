@@ -80,6 +80,8 @@ class _ChatMessage extends StatelessWidget {
         return _FileBody(content: message.content);
       case ChatMessageType.image:
         return _ImageBody(image: message.content);
+      case ChatMessageType.voice:
+        return _VoiceBody(content: message.content);
       default:
         return _UnknownBody(message: message);
     }
@@ -116,6 +118,17 @@ class _ChatMessage extends StatelessWidget {
       default:
         return const SizedBox();
     }
+  }
+}
+
+class _VoiceBody extends StatelessWidget {
+  final dynamic content;
+
+  const _VoiceBody({super.key, this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox();
   }
 }
 
@@ -197,6 +210,8 @@ class _FileBodyState extends State<_FileBody> {
         return const Icon(Icons.audiotrack_rounded, size: 48);
       case FileMessageType.video:
         return const Icon(Icons.videocam_rounded, size: 48);
+      case FileMessageType.image:
+        return const Icon(Icons.image_rounded, size: 48);
       default:
         return const Icon(Icons.file_present_rounded, size: 48);
     }
@@ -216,7 +231,7 @@ class _TextBody extends StatelessWidget {
         vertical: 8,
       ),
       child: SelectableText(
-        contextMenuBuilder: null,
+        // contextMenuBuilder: null,
         text,
       ),
     );
@@ -369,18 +384,17 @@ class _Chip extends StatefulWidget {
 
 class _ChipState extends State<_Chip> {
   String content = "";
-  bool isLeaveEnter = false;
   ChatInfo? chatInfo;
 
   bool get self => widget.message.content == glide.uid();
 
+  bool get isLeaveEnter =>
+      widget.message.type == ChatMessageType.leave ||
+      widget.message.type == ChatMessageType.enter;
+
   @override
   void initState() {
     super.initState();
-    setState(() {
-      isLeaveEnter = widget.message.type == ChatMessageType.leave ||
-          widget.message.type == ChatMessageType.enter;
-    });
     updateContent();
     if (isLeaveEnter) {
       chatInfo = ChatInfoManager.get(false, widget.message.content);

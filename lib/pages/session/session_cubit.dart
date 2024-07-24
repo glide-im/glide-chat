@@ -154,11 +154,12 @@ class _SessionCubit extends Cubit<_SessionState> {
     try {
       final name = file.path.split(Platform.pathSeparator).last;
       final size = await file.length();
+      FileMessageType type = FileMessageType.of(name);
       final body = FileMessageBody(
         name: name,
         url: file.path,
         size: size,
-        type: FileMessageType.unknown,
+        type: type,
       );
       await session.sendFileMessage(body);
     } catch (e, s) {
