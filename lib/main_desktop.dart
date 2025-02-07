@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/app.dart';
@@ -12,18 +14,21 @@ void main() async {
   WindowManager w = WindowManager.instance;
   await w.ensureInitialized();
   WindowOptions windowOptions = const WindowOptions(
-      center: true,
-      title: "Glide Chat",
-      titleBarStyle: TitleBarStyle.hidden,
-      skipTaskbar: false,
-      windowButtonVisibility: true);
+    center: true,
+    title: "Glide Chat",
+    titleBarStyle: TitleBarStyle.hidden,
+    skipTaskbar: false,
+    windowButtonVisibility: true,
+  );
   w.waitUntilReadyToShow(windowOptions, () async {
     // await w.setMinimumSize(const Size(700, 500));
     await w.setMinimumSize(const Size(300, 400));
     await w.setBackgroundColor(Colors.transparent);
     await w.show();
     await w.focus();
-    await w.setAsFrameless();
+    if (Platform.isWindows) {
+      await w.setAsFrameless();
+    }
   });
 
   runApp(

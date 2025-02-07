@@ -28,7 +28,9 @@ class HomePageDesktop extends StatelessWidget {
           flex: 1,
           child: Column(
             children: [
-              _SessionListBar(scaffoldKey: scaffoldKey),
+              WithMacOsBarPadding(
+                child: _SessionListBar(scaffoldKey: scaffoldKey),
+              ),
               const Divider(),
               const Expanded(
                 child: SessionListView(),
@@ -42,8 +44,7 @@ class HomePageDesktop extends StatelessWidget {
           child: BlocBuilder<SessionCubit, SessionState>(
             buildWhen: (c, p) => c.currentSession != p.currentSession,
             builder: (context, state) {
-              final session =
-                  SessionCubit.of(context).getSession(state.currentSession);
+              final session = SessionCubit.of(context).getSession(state.currentSession);
               if (session == null) {
                 return _NoSession();
               }

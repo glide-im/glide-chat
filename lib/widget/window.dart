@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/widget/adaptive.dart';
@@ -19,8 +21,14 @@ class _DesktopWindowState extends State<DesktopWindow> with WindowListener {
 
   @override
   void initState() {
-    WindowManager.instance.addListener(this);
     super.initState();
+    WindowManager.instance.addListener(this);
+    init();
+  }
+
+  void init() async {
+    await windowManager.setPreventClose(true);
+    setState(() {});
   }
 
   @override
@@ -46,9 +54,18 @@ class _DesktopWindowState extends State<DesktopWindow> with WindowListener {
   }
 
   @override
+  void onWindowClose() async {
+    await windowManager.destroy();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    EdgeInsets padding = EdgeInsets.zero;
+    if (Platform.isWindows && !fullscreen) {
+      padding = const EdgeInsets.all(16);
+    }
     return Padding(
-      padding: fullscreen ? EdgeInsets.zero : const EdgeInsets.all(16),
+      padding: padding,
       child: Container(
         decoration: fullscreen
             ? null
@@ -74,8 +91,7 @@ class _DesktopWindowState extends State<DesktopWindow> with WindowListener {
                 right: 0,
                 child: GestureDetector(
                   onTapDown: (d) {
-                    WindowManager.instance
-                        .startResizing(ResizeEdge.bottomRight);
+                    WindowManager.instance.startResizing(ResizeEdge.bottomRight);
                   },
                   child: const MouseRegion(
                     cursor: SystemMouseCursors.resizeDownRight,
@@ -139,6 +155,23 @@ class WindowBar extends StatelessWidget {
   }
 }
 
+class WithMacOsBarPadding extends StatelessWidget {
+  final Widget child;
+
+  const WithMacOsBarPadding({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Platform.isMacOS) {
+      return child;
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: child,
+    );
+  }
+}
+
 class WindowBarActions extends StatefulWidget {
   const WindowBarActions({super.key});
 
@@ -161,7 +194,10 @@ class _WindowBarActionsState extends State<WindowBarActions> {
 
   @override
   Widget build(BuildContext context) {
-    return PlatformAdaptive(desktop: (c) => content(context));
+    return PlatformAdaptive(
+      desktop: (c) => content(context),
+      macos: (c) => const SizedBox(height: 20),
+    );
   }
 
   Widget content(BuildContext context) {
@@ -181,9 +217,7 @@ class _WindowBarActionsState extends State<WindowBarActions> {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 child: RotatedBox(
                   quarterTurns: 0,
-                  child: Icon(Icons.push_pin_outlined,
-                      color:
-                          pinTop ? context.theme.colorScheme.secondary : null),
+                  child: Icon(Icons.push_pin_outlined, color: pinTop ? context.theme.colorScheme.secondary : null),
                 ),
               ),
             ),

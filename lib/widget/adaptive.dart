@@ -27,11 +27,20 @@ class Adaptive extends StatelessWidget {
 class PlatformAdaptive extends StatelessWidget {
   final Widget? Function(BuildContext context)? mobile;
   final Widget? Function(BuildContext context)? desktop;
+  final Widget? Function(BuildContext context)? windows;
+  final Widget? Function(BuildContext context)? macos;
   final Widget? Function(BuildContext context)? web;
   final Widget? Function(BuildContext context)? def;
 
-  const PlatformAdaptive(
-      {super.key, this.mobile, this.desktop, this.web, this.def});
+  const PlatformAdaptive({
+    super.key,
+    this.mobile,
+    this.desktop,
+    this.windows,
+    this.macos,
+    this.web,
+    this.def,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +48,16 @@ class PlatformAdaptive extends StatelessWidget {
       buildWhen: (c, p) => c.platform != p.platform,
       builder: (context, state) {
         switch (state.platform) {
-          case PlatformType.desktop:
-            return desktop?.call(context) ?? default_(context);
+          case PlatformType.windows:
+            return (windows ?? desktop)?.call(context) ?? default_(context);
+          case PlatformType.macos:
+            return (macos ?? desktop)?.call(context) ?? default_(context);
           case PlatformType.mobile:
             return mobile?.call(context) ?? default_(context);
           case PlatformType.web:
             return web?.call(context) ?? default_(context);
+          default:
+            return default_(context);
         }
       },
     );

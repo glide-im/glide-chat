@@ -14,7 +14,7 @@ dependencies:
   logger: ^2.2.0
   cupertino_icons: ^1.0.6
   # for desktop platform
-  window_manager: ^0.3.9
+  window_manager: ^0.4.3
   # sqlite access
   sqlite3: ^2.4.3
   # import sqlite shared library

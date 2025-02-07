@@ -90,6 +90,12 @@ class GlobalCubit extends Cubit<GlobalState> {
       platform = PlatformType.web;
     } else if (Platform.isAndroid || Platform.isIOS) {
       platform = PlatformType.mobile;
+    } else if (Platform.isMacOS) {
+      platform = PlatformType.macos;
+    } else if (Platform.isWindows) {
+      platform = PlatformType.windows;
+    } else if (Platform.isLinux) {
+      platform = PlatformType.desktop;
     } else {
       platform = PlatformType.desktop;
     }

@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glide_chat/bloc/global_cubit.dart';
@@ -23,15 +21,10 @@ import 'package:glide_chat/widget/window.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
 part 'chat_message.dart';
-
 part 'desktop.dart';
-
 part 'message_input.dart';
-
 part 'mobile.dart';
-
 part 'session_cubit.dart';
-
 part 'session_info.dart';
 
 class SessionPage extends StatefulWidget {
@@ -238,8 +231,7 @@ class SessionMessageList extends StatelessWidget {
         return _Chip(message: msg);
       default:
         return BlocBuilder<_SessionCubit, _SessionState>(
-          buildWhen: (c, p) =>
-              c.messageState[msg.mid] != p.messageState[msg.mid],
+          buildWhen: (c, p) => c.messageState[msg.mid] != p.messageState[msg.mid],
           builder: (context, state) {
             return _ChatMessage(
               key: ValueKey(msg),
@@ -287,20 +279,14 @@ class SessionMenuButton extends StatelessWidget {
     return [
       PopupMenuItem(
         child: const Row(
-          children: [
-            Icon(Icons.edit_note_rounded),
-            SizedBox(width: 12),
-            Text("Edit Session")
-          ],
+          children: [Icon(Icons.edit_note_rounded), SizedBox(width: 12), Text("Edit Session")],
         ),
         onTap: () {},
       ),
       PopupMenuItem(
         child: Row(
           children: [
-            Icon(settings.muted
-                ? Icons.volume_up_rounded
-                : Icons.volume_off_rounded),
+            Icon(settings.muted ? Icons.volume_up_rounded : Icons.volume_off_rounded),
             const SizedBox(width: 12),
             Text(settings.muted ? "Unmute" : "Mute"),
           ],
@@ -313,9 +299,7 @@ class SessionMenuButton extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              settings.pinned <= 0
-                  ? Icons.push_pin_rounded
-                  : Icons.push_pin_outlined,
+              settings.pinned <= 0 ? Icons.push_pin_rounded : Icons.push_pin_outlined,
             ),
             const SizedBox(width: 12),
             Text(settings.pinned > 0 ? "Unpin" : "Pin")
@@ -339,11 +323,7 @@ class SessionMenuButton extends StatelessWidget {
       ),
       PopupMenuItem(
         child: const Row(
-          children: [
-            Icon(Icons.delete_rounded),
-            SizedBox(width: 12),
-            Text("Delete")
-          ],
+          children: [Icon(Icons.delete_rounded), SizedBox(width: 12), Text("Delete")],
         ),
         onTap: () {
           SessionCubit.of(context).deleteSession(id);

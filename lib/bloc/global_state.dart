@@ -2,6 +2,8 @@ part of 'global_cubit.dart';
 
 enum PlatformType {
   desktop,
+  windows,
+  macos,
   mobile,
   web;
 }
