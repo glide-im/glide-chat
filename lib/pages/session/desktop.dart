@@ -60,7 +60,12 @@ class SessionBarDesktop extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(width: 16),
             titleBlock(context),
             const Spacer(),
-            actionBlock(),
+            Theme(
+              data: context.theme.copyWith(
+                colorScheme: context.theme.colorScheme.copyWith(onPrimary: Colors.black),
+              ),
+              child: actionBlock(),
+            ),
           ],
         ),
         const Spacer(),
@@ -106,8 +111,7 @@ class SessionBarDesktop extends StatelessWidget implements PreferredSizeWidget {
                   const TextStyle(),
               child: title,
             ),
-            if (isChannel)
-              Text("100 members", style: context.textTheme.labelSmall),
+            if (isChannel) Text("100 members", style: context.textTheme.labelSmall),
           ],
         ),
       ),
@@ -115,5 +119,5 @@ class SessionBarDesktop extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(70);
+  Size get preferredSize => const Size.fromHeight(74);
 }

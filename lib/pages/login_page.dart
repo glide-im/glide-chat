@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:glide_chat/bloc/global_cubit.dart';
-import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/routes.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/utils/logger.dart';
@@ -91,8 +90,7 @@ class _LoginFormState extends State<LoginForm> {
     } catch (_, e) {
       loge("login page", e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Login failed")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Login failed")));
       }
     }
   }
@@ -110,8 +108,7 @@ class _LoginFormState extends State<LoginForm> {
     } catch (_, e) {
       loge("login page", e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Login failed")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Login failed")));
       }
     }
   }
@@ -151,10 +148,8 @@ class _LoginFormState extends State<LoginForm> {
               const SizedBox(width: 8),
               TextButton(
                 onPressed: () async {
-                  DbCache.instance.test();
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text("TODO")));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("TODO")));
                   }
                 },
                 child: const Text("Sign Up"),

@@ -30,8 +30,8 @@ class SessionCubit extends Cubit<SessionState>
       return;
     }
     glide.setSessionEventInterceptor(this);
-    glide.setSessionCache(DbCache.instance.session);
-    glide.setMessageCache(DbCache.instance.message);
+    glide.setSessionCache(AppCache.instance.session);
+    glide.setMessageCache(AppCache.instance.message);
 
     glide.sessionManager.events().listen((event) {
       try {
@@ -47,7 +47,7 @@ class SessionCubit extends Cubit<SessionState>
     final sessions = {...state.sessions};
     sessions[id] = sessions[id]!.copyWith(settings: settings);
     final json = jsonEncode(settings.toMap());
-    await DbCache.instance.session.setSetting(id, json);
+    await AppCache.instance.session.setSetting(id, json);
     emit(state.copyWith(
       sessions: sessions,
       sessionVersion: state.sessionVersion + 1,
@@ -148,7 +148,7 @@ class SessionCubit extends Cubit<SessionState>
   }
 
   Future<SessionSettings> _getSessionSetting(String id) async {
-    final ss = await DbCache.instance.session.getSetting(id);
+    final ss = await AppCache.instance.session.getSetting(id);
     if (ss == null) {
       return SessionSettings.def();
     }

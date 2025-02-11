@@ -1,3 +1,4 @@
+import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/cache/sqlite_cache.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
@@ -7,7 +8,7 @@ abstract class SessionSettingCache {
   Future setSetting(String id, String value);
 }
 
-class BufferedSessionCache implements SessionListCache, SessionSettingCache {
+class BufferedSessionCache implements SessionCache {
   static final _memoryCache = SessionListMemoryCache();
   SessionListCache? _memory;
   final tag = "SessionCache";

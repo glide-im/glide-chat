@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:glide_chat/utils/extensions.dart';
 import 'package:glide_chat/widget/adaptive.dart';
@@ -162,12 +163,12 @@ class WithMacOsBarPadding extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isMacOS) {
-      return child;
-    }
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: child,
+    return PlatformAdaptive(
+      def: (c) => child,
+      macos: (c) => Padding(
+        padding: const EdgeInsets.only(top: 24),
+        child: child,
+      ),
     );
   }
 }
@@ -185,6 +186,9 @@ class _WindowBarActionsState extends State<WindowBarActions> {
   @override
   void initState() {
     super.initState();
+    if (kIsWeb) {
+      return;
+    }
     WindowManager.instance.isAlwaysOnTop().then((value) {
       setState(() {
         pinTop = value;
@@ -195,6 +199,7 @@ class _WindowBarActionsState extends State<WindowBarActions> {
   @override
   Widget build(BuildContext context) {
     return PlatformAdaptive(
+      web: (c) => const SizedBox(height: 20),
       desktop: (c) => content(context),
       macos: (c) => const SizedBox(height: 20),
     );

@@ -61,8 +61,10 @@ class GlobalCubit extends Cubit<GlobalState> {
       name += String.fromCharCode(rnd);
     }
     final avatar = "https://api.dicebear.com/6.x/adventurer/svg?seed=$name";
-    final bean = await glide.guestLogin(name, avatar);
-    await _onLogin(bean).forEach((element) {
+    final ab = await glide.guestLogin(name, avatar);
+    await glide.initCache(ab.uid.toString());
+    await glide.connect(ab);
+    await _onLogin(ab).forEach((element) {
       logd(tag, "login guest=> $element");
     });
   }
@@ -70,7 +72,7 @@ class GlobalCubit extends Cubit<GlobalState> {
   Future logout() async {
     await glide.logout();
     await UserCache.clear();
-    await DbCache.clear();
+    await AppCache.clear();
   }
 
   @override

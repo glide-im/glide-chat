@@ -1,26 +1,28 @@
 import 'dart:convert';
 
 import 'package:glide_chat/bloc/global_cubit.dart';
-import 'package:glide_chat/cache/session_cache.dart';
+import 'package:glide_chat/cache/cache_io.dart' if (dart.library.html) 'package:glide_chat/cache/cache_web.dart';
 import 'package:glide_chat/model/chat_info.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqlite3/sqlite3.dart';
 
-class DbCache {
-  BufferedSessionCache session = BufferedSessionCache();
-  GlideMessageCache message = BufferedMessageCache();
+abstract class SessionCache extends SessionListMemoryCache {
+  Future<String?> getSetting(String id);
+
+  Future setSetting(String id, String value);
+}
+
+class AppCache {
+  SessionCache session = CacheFactory.createSessionListCache();
+  GlideMessageCache message = CacheFactory.createMessageCache();
   static const tag = "AppCache";
 
-  static final DbCache _instance = DbCache();
+  static final AppCache _instance = AppCache();
 
-  static DbCache get instance => _instance;
+  static AppCache get instance => _instance;
 
-  static Stream<String> init(String uid) async* {}
-
-  void test() {
-    final db = sqlite3.open("db", mode: OpenMode.readWriteCreate);
-    db.execute("select * from sqlite_master where type='table';");
+  static Stream<String> init(String uid) async* {
+    //
   }
 
   static Future clear() async {
@@ -39,6 +41,14 @@ class ChatInfoManager {
     return "i_${channel ? "ch" : "user"}_$id";
   }
 
+  static Future<ChatInfo> loadOrUnknown(bool channel, String id) async {
+    try {
+      return await load(channel, id);
+    } catch (e) {
+      return ChatInfo(id: id, name: id, avatar: "", lastSee: 0);
+    }
+  }
+
   static Future<ChatInfo> load(bool channel, String id) async {
     // logd(tag, "load=>channel:$channel, id:$id");
 
@@ -50,7 +60,7 @@ class ChatInfoManager {
     if (channel) {
       return ChatInfo(id: id, name: id, avatar: "", lastSee: 0);
     } else {
-      if (id == "system"){
+      if (id == "system") {
         c = ChatInfo(id: id, name: "system", avatar: "", lastSee: 0);
       }
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -59,8 +69,12 @@ class ChatInfoManager {
         c = ChatInfo.fromMap(jsonDecode(json));
       } else {
         final us = await glide.api.user.getUserInfo([int.parse(id)]);
-        final ui = us.first;
-        c = ChatInfo(id: id, name: ui.nickName, avatar: ui.avatar, lastSee: 0);
+        if (us.isEmpty) {
+          c = ChatInfo(id: id, name: id, avatar: "", lastSee: 0);
+        } else {
+          final ui = us.first;
+          c = ChatInfo(id: id, name: ui.nickName, avatar: ui.avatar, lastSee: 0);
+        }
       }
       _cache[key] = c;
       await prefs.setString(key, jsonEncode(c.toMap()));

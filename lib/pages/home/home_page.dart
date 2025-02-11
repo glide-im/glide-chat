@@ -45,10 +45,7 @@ class _HomePageState extends State<HomePage> {
       buildWhen: (c, p) =>
           c.initialized != p.initialized || c.logged != p.logged,
       builder: (ctx, state) {
-        if (!state.initialized) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!state.logged) {
+        if (!state.initialized || !state.logged) {
           return const Center(child: CircularProgressIndicator());
         }
         return Adaptive(

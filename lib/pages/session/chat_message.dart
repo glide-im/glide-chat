@@ -399,7 +399,7 @@ class _ChipState extends State<_Chip> {
     if (isLeaveEnter) {
       chatInfo = ChatInfoManager.get(false, widget.message.content);
       if (chatInfo == null) {
-        ChatInfoManager.load(false, widget.message.content).then((value) {
+        ChatInfoManager.loadOrUnknown(false, widget.message.content).then((value) {
           setState(() {
             chatInfo = value;
           });

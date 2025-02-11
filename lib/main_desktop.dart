@@ -20,7 +20,7 @@ void main() async {
     skipTaskbar: false,
     windowButtonVisibility: true,
   );
-  w.waitUntilReadyToShow(windowOptions, () async {
+  await w.waitUntilReadyToShow(windowOptions, () async {
     // await w.setMinimumSize(const Size(700, 500));
     await w.setMinimumSize(const Size(300, 400));
     await w.setBackgroundColor(Colors.transparent);
