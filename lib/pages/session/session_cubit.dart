@@ -84,6 +84,11 @@ class _SessionCubit extends Cubit<_SessionState> {
 
   Future init() async {
     session = (await glide.sessionManager.get(state.info.id))!;
+
+    session.getOnlineMembers().then((m){
+      logd(tag, "online members: $m");
+    });
+
     state.focusNode.addListener(() {
       if (state.focusNode.hasFocus) {
         setEmojiVisibility(false);
@@ -151,20 +156,20 @@ class _SessionCubit extends Cubit<_SessionState> {
   }
 
   void sendFile(File file) async {
-    try {
-      final name = file.path.split(Platform.pathSeparator).last;
-      final size = await file.length();
-      FileMessageType type = FileMessageType.of(name);
-      final body = FileMessageBody(
-        name: name,
-        url: file.path,
-        size: size,
-        type: type,
-      );
-      await session.sendFileMessage(body);
-    } catch (e, s) {
-      logd(tag, s);
-    }
+    // try {
+    //   final name = file.path.split(Platform.pathSeparator).last;
+    //   final size = await file.length();
+    //   FileMessageType type = FileMessageType.of(name);
+    //   final body = FileMessageBody(
+    //     name: name,
+    //     url: file.path,
+    //     size: size,
+    //     type: type,
+    //   );
+    //   await session.sendFileMessage(body);
+    // } catch (e, s) {
+    //   logd(tag, s);
+    // }
   }
 
   void sendMessage() async {

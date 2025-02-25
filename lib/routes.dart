@@ -6,6 +6,7 @@ import 'package:glide_chat/pages/login_page.dart';
 import 'package:glide_chat/pages/session/session_page.dart';
 import 'package:glide_chat/pages/user_profile_page.dart';
 import 'package:glide_chat/utils/extensions.dart';
+import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_chat/widget/notification.dart';
 
 enum AppRoutes {
@@ -41,18 +42,10 @@ enum AppRoutes {
     return Navigator.pushNamed(context, name, arguments: arg);
   }
 
-  static List<Route<dynamic>> initRouteListFactory(String initialRoute) {
-    return [
-      MaterialPageRoute(
-        settings: RouteSettings(name: AppRoutes.home.name),
-        builder: (context) => const HomePage(),
-      ),
-    ];
-  }
-
   static Route<dynamic>? routeFactory(RouteSettings settings) {
     final routeName = settings.name;
     final Function? routeBuilder = appRoutes[routeName];
+    logd('route', 'build route=>$routeName');
 
     if (routeBuilder == null) {
       return MaterialPageRoute(

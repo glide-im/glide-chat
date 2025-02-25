@@ -51,6 +51,9 @@ class ChatInfoManager {
 
   static Future<ChatInfo> load(bool channel, String id) async {
     // logd(tag, "load=>channel:$channel, id:$id");
+    if (id.isEmpty || id == "system") {
+      return ChatInfo(id: id, name: id, avatar: "", lastSee: 0);
+    }
 
     final key = _key(channel, id);
     ChatInfo? c = _cache[key];

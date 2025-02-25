@@ -11,9 +11,9 @@ import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 import 'global_cubit.dart';
 import 'session_state.dart';
 
-class SessionCubit extends Cubit<SessionState>
-    implements SessionEventInterceptor {
+class SessionCubit extends Cubit<SessionState> implements SessionEventInterceptor {
   final String tag = "SessionCubit";
+  bool _initializing = false;
 
   SessionCubit() : super(SessionState.init()) {
     stream.listen((event) {
@@ -29,6 +29,10 @@ class SessionCubit extends Cubit<SessionState>
     if (state.initialized) {
       return;
     }
+    if (_initializing) {
+      return stream.firstWhere((s) => s.initialized);
+    }
+    _initializing = true;
     glide.setSessionEventInterceptor(this);
     glide.setSessionCache(AppCache.instance.session);
     glide.setMessageCache(AppCache.instance.message);
@@ -41,6 +45,7 @@ class SessionCubit extends Cubit<SessionState>
       }
     });
     initSession();
+    _initializing = false;
   }
 
   void updateSessionSettings(String id, SessionSettings settings) async {
@@ -67,8 +72,7 @@ class SessionCubit extends Cubit<SessionState>
   Future togglePin(String id) async {
     SessionSettings settings = state.sessions[id]!.settings;
     if (settings.pinned == 0) {
-      settings =
-          settings.copyWith(pinned: DateTime.now().millisecondsSinceEpoch);
+      settings = settings.copyWith(pinned: DateTime.now().millisecondsSinceEpoch);
     } else {
       settings = settings.copyWith(pinned: 0);
     }
@@ -94,8 +98,7 @@ class SessionCubit extends Cubit<SessionState>
   }
 
   Future<Session> createSession(String id, bool channel) async {
-    final s = await glide.sessionManager
-        .create(id, channel ? SessionType.channel : SessionType.chat);
+    final s = await glide.sessionManager.create(id, channel ? SessionType.channel : SessionType.chat);
     final ss = Session(info: s.info, settings: await _getSessionSetting(id));
     state.sessions[id] = ss;
     return ss;
@@ -216,37 +219,37 @@ class SessionCubit extends Cubit<SessionState>
   @override
   Future<String?> onUpdateLastMessage(GlideSessionInfo si, Message cm) async {
     String content = "";
-    switch (cm.type) {
-      case ChatMessageType.markdown:
-      case ChatMessageType.text:
+
+    switch (cm.type.type) {
+      case TextMessageType.value:
         content = cm.content;
         break;
-      case ChatMessageType.image:
+      case ImageMessageType.value:
         content = "[Image]";
         break;
-      case ChatMessageType.file:
+      case FileMessageType.value:
         content = "[File]";
         break;
-      case ChatMessageType.location:
-        content = "[Location]";
-        break;
-      case ChatMessageType.voice:
-        content = "[Voice]";
-        break;
-      case ChatMessageType.video:
-        content = "[Video]";
-        break;
-      case ChatMessageType.custom:
+      // case ChatMessageType.location:
+      //   content = "[Location]";
+      //   break;
+      // case ChatMessageType.voice:
+      //   content = "[Voice]";
+      //   break;
+      // case ChatMessageType.video:
+      //   content = "[Video]";
+      //   break;
+      case CustomMessageType.value:
         content = "[Message]";
-      case ChatMessageType.enter:
+      case EnterMessageType.value:
         final from = await ChatInfoManager.load(false, cm.from);
         content = "${from.name} joined the channel";
         break;
-      case ChatMessageType.leave:
+      case LeaveMessageType.value:
         final from = await ChatInfoManager.load(false, cm.from);
         content = "${from.name} left the channel";
         break;
-      case ChatMessageType.unknown:
+      default:
         content = "[Unknown]";
         break;
     }

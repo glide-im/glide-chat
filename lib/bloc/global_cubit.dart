@@ -19,15 +19,26 @@ final glide = Glide();
 class GlobalCubit extends Cubit<GlobalState> {
   final tag = "GlobalCubit";
 
-  GlobalCubit() : super(GlobalInitial());
+  bool _initializing = false;
+
+  GlobalCubit() : super(GlobalInitial()) {
+    stream.listen((event) {
+      logd(tag, "state changed: $event");
+    });
+  }
 
   Future<GlobalState> init() async {
     if (state.initialized) {
       return state;
     }
+    if (_initializing) {
+      return stream.firstWhere((s) => s.initialized);
+    }
+    _initializing = true;
     await _init().forEach((log) {
       logd(tag, log);
     });
+    _initializing = false;
     return state;
   }
 
@@ -82,9 +93,6 @@ class GlobalCubit extends Cubit<GlobalState> {
   }
 
   Stream<String> _init() async* {
-    stream.listen((event) {
-      logd(tag, "state changed: $event");
-    });
     yield "init start";
 
     PlatformType platform = PlatformType.mobile;
@@ -113,13 +121,13 @@ class GlobalCubit extends Cubit<GlobalState> {
       if (log.trim().isEmpty) {
         return;
       }
-      print(log);
+      logd(tag, log);
     });
     Glide.setLogger(IOSink(sc));
 
     yield* glide.init().map((event) => "sdk init: $event");
 
-    glide.states().listen((event) {
+    glide.states().distinct().listen((event) {
       emit(state.copyWith(state: event));
     });
 

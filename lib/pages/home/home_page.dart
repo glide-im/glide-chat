@@ -15,7 +15,6 @@ import 'package:glide_chat/widget/window.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
 part 'desktop.dart';
-
 part 'mobile.dart';
 
 class HomePage extends StatefulWidget {
@@ -31,8 +30,10 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     final cubit = GlobalCubit.of(context);
     final sessionCubit = SessionCubit.of(context);
-    sessionCubit.init().then((value) => cubit.init()).then((value) {
-      if (!cubit.state.logged) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      await sessionCubit.init();
+      await cubit.init();
+      if (!cubit.state.logged && mounted) {
         logd("HomePage", "not logged in");
         AppRoutes.login.go(context);
       }
@@ -42,8 +43,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GlobalCubit, GlobalState>(
-      buildWhen: (c, p) =>
-          c.initialized != p.initialized || c.logged != p.logged,
+      buildWhen: (c, p) => c.initialized != p.initialized || c.logged != p.logged,
       builder: (ctx, state) {
         if (!state.initialized || !state.logged) {
           return const Center(child: CircularProgressIndicator());

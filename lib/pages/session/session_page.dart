@@ -225,9 +225,9 @@ class SessionMessageList extends StatelessWidget {
   }
 
   Widget item(Message msg) {
-    switch (msg.type) {
-      case ChatMessageType.enter:
-      case ChatMessageType.leave:
+    switch (msg.type.type) {
+      case EnterMessageType.value:
+      case LeaveMessageType.value:
         return _Chip(message: msg);
       default:
         return BlocBuilder<_SessionCubit, _SessionState>(

@@ -43,8 +43,7 @@ class _ChatMessage extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Column(
-            crossAxisAlignment:
-                self ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: self ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Row(
@@ -56,7 +55,12 @@ class _ChatMessage extends StatelessWidget {
                   Flexible(
                     child: ChatMessageContainer(
                       self: self,
-                      child: body(),
+                      child: GestureDetector(
+                        onTap: (){
+                          logd('chat-message', '${message.type}, ${message.content}');
+                        },
+                        child: body(),
+                      ),
                     ),
                   ),
                 ],
@@ -72,16 +76,15 @@ class _ChatMessage extends StatelessWidget {
   }
 
   Widget body() {
-    switch (message.type) {
-      case ChatMessageType.text:
-      case ChatMessageType.markdown:
+    switch (message.type.type) {
+      case TextMessageType.value:
         return _TextBody(text: message.content.toString());
-      case ChatMessageType.file:
+      case FileMessageType.value:
         return _FileBody(content: message.content);
-      case ChatMessageType.image:
+      case ImageMessageType.value:
         return _ImageBody(image: message.content);
-      case ChatMessageType.voice:
-        return _VoiceBody(content: message.content);
+      // case ChatMessageType.voice:
+      //   return _VoiceBody(content: message.content);
       default:
         return _UnknownBody(message: message);
     }
@@ -110,11 +113,9 @@ class _ChatMessage extends StatelessWidget {
         return const Icon(Icons.check_rounded, color: Colors.green, size: 18);
       case MessageStatus.received:
         if (sessionType == SessionType.channel) return const SizedBox();
-        return const Icon(Icons.done_all_outlined,
-            color: Colors.green, size: 18);
+        return const Icon(Icons.done_all_outlined, color: Colors.green, size: 18);
       case MessageStatus.failed:
-        return const Icon(Icons.error_outline_rounded,
-            color: Colors.red, size: 18);
+        return const Icon(Icons.error_outline_rounded, color: Colors.red, size: 18);
       default:
         return const SizedBox();
     }
@@ -204,14 +205,14 @@ class _FileBodyState extends State<_FileBody> {
 
   Widget icon() {
     switch (body?.type) {
-      case FileMessageType.document:
-        return const Icon(Icons.insert_drive_file_rounded, size: 48);
-      case FileMessageType.audio:
-        return const Icon(Icons.audiotrack_rounded, size: 48);
-      case FileMessageType.video:
-        return const Icon(Icons.videocam_rounded, size: 48);
-      case FileMessageType.image:
-        return const Icon(Icons.image_rounded, size: 48);
+      // case FileType.document:
+      //   return const Icon(Icons.insert_drive_file_rounded, size: 48);
+      // case FileType.audio:
+      //   return const Icon(Icons.audiotrack_rounded, size: 48);
+      // case FileType.video:
+      //   return const Icon(Icons.videocam_rounded, size: 48);
+      // case FileType.image:
+      //   return const Icon(Icons.image_rounded, size: 48);
       default:
         return const Icon(Icons.file_present_rounded, size: 48);
     }
@@ -251,7 +252,7 @@ class _UnknownBody extends StatelessWidget {
         vertical: 8,
       ),
       child: Text(
-        "Unknown Message Type",
+        "Unknown Message Type: ${message.type.type}",
         style: context.theme.textTheme.bodySmall,
       ),
     );
@@ -388,9 +389,7 @@ class _ChipState extends State<_Chip> {
 
   bool get self => widget.message.content == glide.uid();
 
-  bool get isLeaveEnter =>
-      widget.message.type == ChatMessageType.leave ||
-      widget.message.type == ChatMessageType.enter;
+  bool get isLeaveEnter => {LeaveMessageType.value, EnterMessageType.value}.contains(widget.message.type.type);
 
   @override
   void initState() {
@@ -412,7 +411,7 @@ class _ChipState extends State<_Chip> {
   void updateContent() {
     if (isLeaveEnter) {
       setState(() {
-        if (widget.message.type == ChatMessageType.enter) {
+        if (widget.message.type.type == EnterMessageType.value) {
           content = "${self ? "you" : widget.message.content} joined the chat";
         } else {
           content = "${self ? "you" : widget.message.content} left to chat";
@@ -429,9 +428,7 @@ class _ChipState extends State<_Chip> {
       widthFactor: 1,
       child: Container(
         padding: const EdgeInsets.only(top: 2, left: 8, right: 8, bottom: 4),
-        decoration: BoxDecoration(
-            color: Colors.grey.shade400,
-            borderRadius: BorderRadius.circular(18)),
+        decoration: BoxDecoration(color: Colors.grey.shade400, borderRadius: BorderRadius.circular(18)),
         child: Text(
           content,
           style: const TextStyle(color: Colors.white, fontSize: 12),

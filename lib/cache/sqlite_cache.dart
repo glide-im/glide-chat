@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
@@ -275,19 +274,14 @@ class _MessageSQLiteCache implements GlideMessageCache {
   @override
   Future<void> addMessage(String sessionId, Message message) async {
     logd(tag, "insert message, $sessionId ${message.mid}");
-    String content;
-    if (!message.type.isTextBody()) {
-      content = const JsonEncoder().convert(message.content);
-    } else {
-      content = message.content as String;
-    }
+    String content = message.type.encode(message.content);
     db.execute("""
     INSERT INTO `message` VALUES (?,?,?,?,?,?,?,?,?,?);
     """, [
       message.status.value,
       message.mid,
       message.cliMid,
-      message.type.value,
+      message.type.type,
       message.from,
       message.to,
       message.seq,
@@ -299,16 +293,14 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future<List<Message>> getMessages(String sessionId) async {
-    final res =
-        db.select("SELECT * FROM `message` WHERE `session_id`=?;", [sessionId]);
+    final res = db.select("SELECT * FROM `message` WHERE `session_id`=?;", [sessionId]);
     final ms = <Message>[];
     for (var row in res.rows) {
       final status = MessageStatus.valueOf(row[0] as int);
-      final type = ChatMessageType.of(row[3] as num);
+      final t = row[3] as int;
+      final type = MessageType.typeOf(t) ?? UnknownMessageType(t);
       dynamic content = row[8] as String;
-      if (!type.isTextBody()) {
-        content = const JsonDecoder().convert(content);
-      }
+      content = type.decode(content);
       final m = Message(
         status: status,
         mid: row[1] as num,
@@ -336,18 +328,15 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future<Message?> getMessage(num mid) async {
-    final res =
-        db.select("SELECT * FROM `message` WHERE `mid`=?;", [mid]).firstOrNull;
+    final res = db.select("SELECT * FROM `message` WHERE `mid`=?;", [mid]).firstOrNull;
     if (res == null) {
       return null;
     }
     final row = res.values;
     final status = MessageStatus.valueOf(row[0] as int);
-    final type = ChatMessageType.of(row[3] as int);
+    final type = MessageType.typeOf(row[3] as int)!;
     dynamic content = row[8] as String;
-    if (!type.isTextBody()) {
-      content = const JsonDecoder().convert(content);
-    }
+    content = type.decode(content);
     return Message(
       status: status,
       mid: row[1] as num,
@@ -363,8 +352,7 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future<bool> hasMessage(num mid) async {
-    final res = db.select(
-        "SELECT COUNT(`mid`) FROM `message` WHERE `mid`=?;", [mid]).firstOrNull;
+    final res = db.select("SELECT COUNT(`mid`) FROM `message` WHERE `mid`=?;", [mid]).firstOrNull;
     if (res?.values.first == 0) {
       return false;
     }
@@ -379,9 +367,7 @@ class _MessageSQLiteCache implements GlideMessageCache {
   @override
   Future<void> updateMessage(Message message) async {
     dynamic cnt = message.content;
-    if (!message.type.isTextBody()) {
-      cnt = const JsonEncoder().convert(cnt);
-    }
+    cnt = message.type.encode(cnt);
     db.execute("""
      UPDATE `message` SET  
      `status`=?, `cli_mid`=?, `type`=?, `from`=?, `to`=?, `seq`=?, `send_at`=?, `content`=?
@@ -389,7 +375,7 @@ class _MessageSQLiteCache implements GlideMessageCache {
     """, [
       message.status.value,
       message.cliMid,
-      message.type.value,
+      message.type.type,
       message.from,
       message.to,
       message.seq,
