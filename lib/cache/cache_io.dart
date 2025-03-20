@@ -1,4 +1,5 @@
 import 'package:glide_chat/cache/app_cache.dart';
+import 'package:glide_chat/cache/realm_cache.dart';
 import 'package:glide_chat/cache/session_cache.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 

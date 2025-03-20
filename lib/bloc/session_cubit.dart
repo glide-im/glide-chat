@@ -152,7 +152,7 @@ class SessionCubit extends Cubit<SessionState> implements SessionEventIntercepto
 
   Future<SessionSettings> _getSessionSetting(String id) async {
     final ss = await AppCache.instance.session.getSetting(id);
-    if (ss == null) {
+    if (ss == null || ss.isEmpty) {
       return SessionSettings.def();
     }
     return SessionSettings.fromMap(jsonDecode(ss));
@@ -179,8 +179,15 @@ class SessionCubit extends Cubit<SessionState> implements SessionEventIntercepto
             Session(
               info: session!.info,
               settings: await _getSessionSetting(event.id),
+              members: {},
             );
         ses[session!.info.id] = old.copyWith(info: session.info);
+        break;
+      case SessionEventType.memberEnter:
+        break;
+      case SessionEventType.memberLeave:
+        break;
+      case SessionEventType.membersUpdate:
         break;
     }
     emit(state.copyWith(

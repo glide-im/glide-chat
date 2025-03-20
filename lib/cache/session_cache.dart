@@ -2,23 +2,21 @@ import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/cache/sqlite_cache.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 
-abstract class SessionSettingCache {
-  Future<String?> getSetting(String id);
-
-  Future setSetting(String id, String value);
-}
+import 'realm_cache.dart';
 
 class BufferedSessionCache implements SessionCache {
-  static final _memoryCache = SessionListMemoryCache();
-  SessionListCache? _memory;
+  SessionCache? _memory;
   final tag = "SessionCache";
 
   BufferedSessionCache();
 
   @override
   Future init(String uid) async {
-    await SQLiteCache.instance.init(uid);
-    _memory = SQLiteCache.instance.sessionCache;
+    // await SQLiteCache.instance.init(uid);
+    // _memory = SQLiteCache.instance.sessionCache;
+    await RealmCache.instance.init(uid);
+    _memory = RealmCache.instance.sessionCache;
+
     await _memory?.init(uid);
   }
 
@@ -54,13 +52,13 @@ class BufferedSessionCache implements SessionCache {
 
   @override
   Future<String?> getSetting(String id) async {
-    final r = await SQLiteCache.instance.sessionSettingCache.getSessionSetting(id);
-    return r.isEmpty ? null : r;
+    final r = await _memory!.getSetting(id);
+    return r;
   }
 
   @override
   Future setSetting(String id, String value) async {
-    await SQLiteCache.instance.sessionSettingCache.updateSessionSetting(id, value);
+    await _memory!.setSetting(id, value);
   }
 }
 
@@ -69,8 +67,10 @@ class BufferedMessageCache implements GlideMessageCache {
 
   @override
   Future init(String uid) async {
-    await SQLiteCache.instance.init(uid);
-    cache = SQLiteCache.instance.messageCache;
+    // await SQLiteCache.instance.init(uid);
+    // cache = SQLiteCache.instance.messageCache;
+    await RealmCache.instance.init(uid);
+    cache = RealmCache.instance.messageCache;
     await cache?.init(uid);
   }
 

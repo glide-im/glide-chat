@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  realm
   screen_retriever_linux
   sqlite3_flutter_libs
   window_manager

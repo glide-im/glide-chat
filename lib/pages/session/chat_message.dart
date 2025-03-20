@@ -56,7 +56,7 @@ class _ChatMessage extends StatelessWidget {
                     child: ChatMessageContainer(
                       self: self,
                       child: GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           logd('chat-message', '${message.type}, ${message.content}');
                         },
                         child: body(),
@@ -85,6 +85,9 @@ class _ChatMessage extends StatelessWidget {
         return _ImageBody(image: message.content);
       // case ChatMessageType.voice:
       //   return _VoiceBody(content: message.content);
+      case EnterMessageType.value:
+      case LeaveMessageType.value:
+        return _Chip(message: message);
       default:
         return _UnknownBody(message: message);
     }

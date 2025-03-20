@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:glide_chat/cache/app_cache.dart';
 import 'package:glide_chat/utils/logger.dart';
 import 'package:glide_dart_sdk/glide_dart_sdk.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class SQLiteCache {
-  late SessionListCache sessionCache;
-  late SessionSettingCache sessionSettingCache;
+  late SessionCache sessionCache;
   late GlideMessageCache messageCache;
 
   static Database? _db;
@@ -35,7 +36,6 @@ class SQLiteCache {
     _db = sqlite3.open(db, mode: OpenMode.readWriteCreate);
     _db!.execute(_SQL.createTableSession);
     _db!.execute(_SQL.createTableSessionSetting);
-    sessionSettingCache = SessionSettingCache(db: _db!);
     sessionCache = _SessionListSqliteCache(db: _db!);
     messageCache = _MessageSQLiteCache(db: _db!);
     _uid = uid;
@@ -193,7 +193,7 @@ class _SQL {
   ''';
 }
 
-class _SessionListSqliteCache implements SessionListCache {
+class _SessionListSqliteCache implements SessionCache {
   final Database db;
   final tag = "SessionListSqliteCache";
 
@@ -244,6 +244,29 @@ class _SessionListSqliteCache implements SessionListCache {
     p.add(id);
     db.execute(_SQL.updateSession, p);
   }
+
+  Future<String> getSessionSetting(String id) async {
+    final result = db.select(_SQL.selectSessionSetting, [id]).firstOrNull;
+    return result?.values[1] as String? ?? "";
+  }
+
+  Future updateSessionSetting(String id, String setting) async {
+    db.execute(_SQL.updateSessionSetting, [id, setting]);
+  }
+
+  Future clearAllSessionSetting() async {
+    db.execute(_SQL.deleteSessionSetting);
+  }
+
+  @override
+  Future<String?> getSetting(String id) {
+    return getSessionSetting(id);
+  }
+
+  @override
+  Future setSetting(String id, String value) async {
+    await updateSessionSetting(id, value);
+  }
 }
 
 class _MessageSQLiteCache implements GlideMessageCache {
@@ -273,8 +296,9 @@ class _MessageSQLiteCache implements GlideMessageCache {
 
   @override
   Future<void> addMessage(String sessionId, Message message) async {
-    logd(tag, "insert message, $sessionId ${message.mid}");
-    String content = message.type.encode(message.content);
+    logd(tag, "insert message, type:${message.type}, $sessionId ${message.mid}, ${message.content}");
+    final encoded = message.type.encode(message.content);
+    String content = encoded is String ? encoded : jsonEncode(encoded);
     db.execute("""
     INSERT INTO `message` VALUES (?,?,?,?,?,?,?,?,?,?);
     """, [
@@ -383,24 +407,5 @@ class _MessageSQLiteCache implements GlideMessageCache {
       cnt,
       message.mid,
     ]);
-  }
-}
-
-class SessionSettingCache {
-  final Database db;
-
-  SessionSettingCache({required this.db});
-
-  Future<String> getSessionSetting(String id) async {
-    final result = db.select(_SQL.selectSessionSetting, [id]).firstOrNull;
-    return result?.values[1] as String? ?? "";
-  }
-
-  Future updateSessionSetting(String id, String setting) async {
-    db.execute(_SQL.updateSessionSetting, [id, setting]);
-  }
-
-  Future clearAllSessionSetting() async {
-    db.execute(_SQL.deleteSessionSetting);
   }
 }

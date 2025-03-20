@@ -51,16 +51,23 @@ class SessionState {
 class Session implements Comparable<Session> {
   final GlideSessionInfo info;
   final SessionSettings settings;
+  final Set<String> members;
 
-  Session({required this.info, required this.settings});
+  Session({
+    required this.info,
+    required this.settings,
+    this.members = const {},
+  });
 
   Session copyWith({
     GlideSessionInfo? info,
     SessionSettings? settings,
+    Set<String>? members,
   }) {
     return Session(
       info: info ?? this.info,
       settings: settings ?? this.settings,
+      members: members ?? this.members,
     );
   }
 

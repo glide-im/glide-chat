@@ -16,7 +16,7 @@ dependencies:
   # for desktop platform
   window_manager: ^0.4.3
   # sqlite access
-  sqlite3: ^2.4.3
+  sqlite3: 2.4.3
   # import sqlite shared library
   sqlite3_flutter_libs: 0.5.23
   # key value storage
@@ -25,6 +25,7 @@ dependencies:
   path_provider: ^2.1.3
   file_picker: ^8.0.5
   in_app_notification: ^1.1.2
+  realm: ^20.0.1
 
   glide_dart_sdk:
     path: ../glide_dart_sdk
